@@ -6,3 +6,10 @@ It recognizes any files ending on .txt as Text files to be selected from.
 Progess is stored in files in the texts directory
 having the same name as a .txt file, but with an added suffix of
 .prog
+
+The statistical analysis tree "wordtree" is saved in a file named
+wordstat.stat
+in the following manner:
+
+the first word in every line is the word in the main tree, in alphabetical order. It is followed by the number of its occurences.
+the words following it are the mistyped words.

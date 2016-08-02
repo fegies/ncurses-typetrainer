@@ -9,13 +9,14 @@ LINKFLAGS = $(SHAREFLAGS)
 COMPILER  = g++
 
 #Name of subpaths inside Odir (Must be the same in ./include and ./src as well)
-SUBPATHS  = . felocale
+SUBPATHS  = . felocale wordtree
 
 #The Objects that are compiled
-OBJS      = $(BASEOBS) $(addprefix felocale/,$(FELOCALOBS))
+OBJS      = $(BASEOBS) $(addprefix felocale/, $(FELOCALOBS)) $(addprefix wordtree/, $(WORDTREEOBS))
 
-BASEOBS   = main.o typescreen.o Textstream.o statsave.o dirlist.o
-FELOCALOBS= Intstring.o encodeconvert.o
+BASEOBS    = main.o typescreen.o Textstream.o statsave.o dirlist.o
+FELOCALOBS = Intstring.o encodeconvert.o
+WORDTREEOBS= Wordtree.o Word.o
 
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 
