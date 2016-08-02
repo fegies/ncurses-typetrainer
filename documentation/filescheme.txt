@@ -1,0 +1,8 @@
+The programm requires a directory named texts in
+the $PWD of the executing Program.
+
+It recognizes any files ending on .txt as Text files to be selected from.
+
+Progess is stored in files in the texts directory
+having the same name as a .txt file, but with an added suffix of
+.prog

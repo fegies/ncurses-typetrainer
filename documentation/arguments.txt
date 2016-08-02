@@ -1,0 +1,7 @@
+Accepted command line arguments:
+
+--s : does not save statistics on exit
+
+--p : does not save progress on exit
+
+-f : loads file named f
