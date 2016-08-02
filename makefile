@@ -12,10 +12,10 @@ COMPILER  = g++
 SUBPATHS  = . felocale
 
 #The Objects that are compiled
-OBJS      = $(BASEOBS) felocale/$(FELOCALOBS)
+OBJS      = $(BASEOBS) $(addprefix felocale/,$(FELOCALOBS))
 
 BASEOBS   = main.o typescreen.o Textstream.o statsave.o dirlist.o
-FELOCALOBS= Intstring.o
+FELOCALOBS= Intstring.o encodeconvert.o
 
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 

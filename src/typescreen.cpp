@@ -6,6 +6,7 @@
 #include <vector>
 #include "Textstream.hpp"
 #include "felocale/Intstring.hpp"
+#include "felocale/encodeconvert.h"
 #include "statsave.h"
 #include "dirlist.h"
 
@@ -103,48 +104,12 @@ void start(std::string filename, bool saveprog, bool savestats)
 
 	//Lambdas
 	auto add_widech = [&](int c){
+		char bytes[5];
+		for(char a = 0; a < 5 ; ++a)
+			bytes[a] = 0;
 
-		//ASCII, no multibyte trickery required
-		if(c <= 0x7f)
-			addch(c);
-		//convert Utf32 back to utf8
-		else
-		{
-			char bytes [4];
-			for(char i=2;i < 4; ++i)
-				bytes[i] = 0;
-
-			//handles the encoding of surrogate bytes
-			auto encodebytes = [&](char num){
-				for(;num > 0;--num){
-					bytes[num] = 0x80;
-					bytes[num] |= (c & 0x3f);
-					c >>= 6;
-				}
-			};
-
-			//two byte encoding
-			if(c <= 0x7ff)
-			{
-				encodebytes(1);
-				bytes[0] = 0xc0;
-				bytes[0] |= (c & 0x1f);
-			}
-			//three byte encoding
-			else if(c <= 0xffff)
-			{
-				encodebytes(2);
-				bytes[0] = 0xe0;
-				bytes[0] |= (c & 0xf);
-			}
-			//four byte encoding
-			else{
-				encodebytes(3);
-				bytes[0] = 0xf0;
-				bytes[0] |= (c & 0x4);
-			}
-			printw(bytes);
-		}
+		felocale::to_utf8(c,bytes);
+		printw(bytes);
 	};
 
 	auto updatestates = [&](){
