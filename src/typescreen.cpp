@@ -75,6 +75,8 @@ std::string selectionscreen()
 
 void start(std::string filename, bool saveprog, bool savestats)
 {
+	clear();
+
 	Textstream ts;
 	ts.open_file(filename);
 

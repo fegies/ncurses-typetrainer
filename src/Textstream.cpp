@@ -93,6 +93,24 @@ void Textstream::stripstring(std::string& instring)
 			}
 		}
 	}
+
 	instring.clear();
-	instring = tstr;
+
+	bool prespace = true;
+	char c;
+	for(int i=0; i<tstr.length();++i)
+	{
+		c = tstr.at(i);
+		if(c == ' ')
+		{
+			if(prespace)
+				continue;
+			else
+				prespace = true;
+		}
+		else
+			prespace = false;
+
+		instring.push_back(c);
+	}
 }
