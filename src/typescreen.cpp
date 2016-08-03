@@ -99,6 +99,8 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 
 	Textstream ts;
 	ts.open_file(filename);
+	if(saveprog)
+		ts.loadposition();
 
 	Wordtree errortree;
 	std::string treefilename="wordstat.stat";

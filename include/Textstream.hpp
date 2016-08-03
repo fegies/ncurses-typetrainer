@@ -20,13 +20,13 @@ public:
 
 	bool fileisopen();
 
+	void loadposition();
 private:
 	//if this string is empty, no file is opened
 	std::string openfile;
 
 	int lastposition;
 
-	void loadposition();
 
 	//strips everything not typable from the string
 	void stripstring(std::string& string);

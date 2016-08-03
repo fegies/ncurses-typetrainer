@@ -37,7 +37,6 @@ void Textstream::open_file(std::string filename)
 	if(in.is_open())
 	{
 		openfile = filename;
-		loadposition();
 	}
 	else{
 		std::cerr << "failed to open file: " << filename << std::endl;

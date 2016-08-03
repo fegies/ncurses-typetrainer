@@ -3,7 +3,7 @@
 PROG      = typetrainer
 VPATH     = src include
 ODIR      = ./bin
-SHAREFLAGS= -g -pipe
+SHAREFLAGS= -g -pipe -O2
 CFLAGS    = $(SHAREFLAGS) -std=c++11 -Wall
 LINKFLAGS = $(SHAREFLAGS) -lpthread
 COMPILER  = g++
@@ -21,7 +21,7 @@ WORDTREEOBS= Wordtree.o Word.o
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 
 run : all
-	$(OPROG) 2>of
+	$(OPROG)
 
 all : buildbin $(OPROG)
 
