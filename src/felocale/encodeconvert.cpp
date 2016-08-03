@@ -47,7 +47,7 @@ char to_utf8(int widechar,char* bytes)
 }
 
 
-std::string converstring(Intstring& inputstring)
+std::string convertstring(Intstring& inputstring)
 {
 	std::string outstring;
 

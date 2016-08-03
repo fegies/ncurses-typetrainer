@@ -4,6 +4,8 @@
 #include <functional>
 #include <algorithm>
 
+#include <iostream>
+
 Word::Word(std::string& newstring, bool insertioncounts)
 {
 	number = (insertioncounts)? 1 : 0;
@@ -27,15 +29,21 @@ Word::Word(Word* newleft, std::string& line)
 {
 	left = newleft;
 	std::stringstream ss(line);
+	content = new std::string;
 	ss >> *content;
 	ss >> number;
-	
+	//std::cerr<<"Adding Word named: "<<*content<<" numbered: "<<number<<std::endl;
+
+	wrongvariants = 0;
+
 	//the word contains mispelled components
 	if(!ss.eof())
 	{
 		int spos = ss.tellg();
 
 		int tcount = std::count(std::istreambuf_iterator<char>(ss),std::istreambuf_iterator<char>(),' ');
+
+		//std::cerr<<"Additional tokens detected: "<<tcount<<std::endl;
 
 		ss.seekg(spos);
 
@@ -46,12 +54,15 @@ Word::Word(Word* newleft, std::string& line)
 			if(l > r)
 				return (Word*)0;
 
-			int mid = l + (r - l) / 2;
+			int mid = l + ((r - l) / 2);
 	
 			Word * lc = buildtree(l, mid-1);
 	
 			ss >> newname;
 			ss >> newnum;
+
+			//std::cerr<<"adding variation named: "<<newname<<" numbered: "<<newnum<<std::endl;
+
 			Word * node = new Word(lc, newname, newnum);
 	
 			node -> assignRight(buildtree(mid+1,r));
@@ -105,6 +116,7 @@ void Word::insertError(std::string& correctword, std::string& variation)
 		{
 			wrongvariants = new Wordtree();
 		}
+	//	std::cerr<<"Errortree: ";
 		wrongvariants->insert(variation);
 	}
 	else if(i < 0)
@@ -147,7 +159,7 @@ std::string Word::serializetostring()
 	ss.append(*content + " " + std::to_string(number));
 
 	if(right != 0)
-		ss.append(right -> serializetostring());
+		ss.append(" " + right -> serializetostring());
 
 	return ss;
 }

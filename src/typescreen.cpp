@@ -9,6 +9,7 @@
 #include "felocale/encodeconvert.h"
 #include "statsave.h"
 #include "dirlist.h"
+#include "wordtree/Wordtree.hpp"
 
 namespace typescreen
 {
@@ -74,13 +75,17 @@ std::string selectionscreen()
 	}
 }
 
-void start(std::string filename, bool saveprog, bool savestats)
+void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 {
 	clear();
 
 	Textstream ts;
 	ts.open_file(filename);
 
+	Wordtree errortree;
+	std::string treefilename="wordstat.stat";
+	if(usetree)
+		errortree.restorefromFile(treefilename);
 
 	//Variables
 	bool timerunning = false;
@@ -99,6 +104,8 @@ void start(std::string filename, bool saveprog, bool savestats)
 	int clength = 0;
 	int tprog = 0;
 	bool * correctness = new bool;
+	bool lastwordwrong = false;
+	std::string typedword;
 
 	int yval = 0;
 
@@ -193,16 +200,47 @@ void start(std::string filename, bool saveprog, bool savestats)
 		refresh();
 	};
 
+	auto feedtree = [&](int c){
+		//Do the wordtree magic
+		if(usetree)
+		{
+			if(line.at(tprog) == ' ' || tprog == line.length())
+			{
+				Intstring* word = line.getWordBefore(tprog);
+				std::string uword = felocale::convertstring(*word);
+				if(lastwordwrong)
+					errortree.insertError(uword,typedword);
+				else
+					errortree.insert(uword);
+				typedword.clear();
+				lastwordwrong=false;
+				delete word;
+			}
+			else if(c != 0){
+				char bytes[5];
+				for(char d = 0; d < 5; ++d)
+					bytes[d] = 0;
+				char count = felocale::to_utf8(c,bytes);
+				for(char a = 0; a < count; ++a)
+					typedword.append(bytes);
+			}
+		}
+	};
+
 	auto comparechar = [&](int c){
+		feedtree(c);
+		++keystrokes;
 		if(tprog == line.length())
 			return;
 
 		if(c == line.at(tprog))
 			correctness[tprog] = true;
 		else{
+			lastwordwrong = true;
 			correctness[tprog] = false;
 			++wrongstrokes;
 		}
+
 		++tprog;
 	};
 
@@ -253,7 +291,6 @@ void start(std::string filename, bool saveprog, bool savestats)
 
 	while(progrunning)
 	{
-		++keystrokes;
 		switch(c)
 		{
 			case 27:
@@ -263,13 +300,16 @@ void start(std::string filename, bool saveprog, bool savestats)
 			case 8:
 			case KEY_DC:
 			case KEY_BACKSPACE:
-				if(tprog > 0)
+				if(!usetree && tprog > 0)
 					--tprog;
 				break;
 			case '\n':
 			case KEY_ENTER:
 				if(tprog == line.length())
+				{
+					feedtree(0);
 					nextline();
+				}
 				break;
 			default:
 				comparechar(c);
@@ -286,6 +326,9 @@ void start(std::string filename, bool saveprog, bool savestats)
 
 	if(savestats)
 		statsave::savestats(errorpercent,keysperminute);
+
+	if(usetree)
+		errortree.storeinFile(treefilename);
 }
 
 }

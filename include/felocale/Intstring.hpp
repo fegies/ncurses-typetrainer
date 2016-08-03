@@ -10,6 +10,7 @@ class Intstring
 public:
 	Intstring();
 	Intstring(std::string& toencode);
+	Intstring(int* chars,int length);
 	~Intstring();
 
 	Intstring& operator=(std::string& stdstring);
@@ -20,6 +21,9 @@ public:
 	int length();
 
 	bool empty();
+
+	//returns a UTF-32 string containing the word before the specified position
+	Intstring* getWordBefore(int pos);
 
 private:
 

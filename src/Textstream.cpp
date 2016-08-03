@@ -4,6 +4,7 @@
 Textstream::Textstream()
 {
 	openfile = "";
+	lastposition = 0;
 }
 
 Textstream::~Textstream()
@@ -24,7 +25,7 @@ void Textstream::saveposition()
 	std::ofstream out(progfilename);
 	if(out.is_open())
 	{
-		out << in.tellg();
+		out << lastposition;
 		out.flush();
 		out.close();
 	}
@@ -48,6 +49,8 @@ std::string Textstream::nextline()
 {
 	if(openfile.empty())
 		return "";
+
+	lastposition = in.tellg();
 
 	std::string line;
 

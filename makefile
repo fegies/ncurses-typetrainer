@@ -21,7 +21,7 @@ WORDTREEOBS= Wordtree.o Word.o
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 
 run : all
-	$(OPROG)
+	$(OPROG) 2>of
 
 all : buildbin $(OPROG)
 

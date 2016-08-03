@@ -11,6 +11,12 @@ Intstring::~Intstring()
 		delete[] contents;
 }
 
+Intstring::Intstring(int* chars, int length)
+{
+	slength = length;
+	contents = chars;
+}
+
 Intstring::Intstring(std::string& stdstring)
 {
 	parseString(stdstring);
@@ -40,6 +46,28 @@ int Intstring::length()
 bool Intstring::empty()
 {
 	return slength == 0;
+}
+
+Intstring* Intstring::getWordBefore(int pos)
+{
+	if(pos < 0)
+		return NULL;
+
+	if(pos > slength)
+		pos = slength;
+
+	int beg = pos-1;
+	while (beg >= 0 && contents[beg]!=' ')
+		--beg;
+	++beg;
+	
+	int len = pos - beg;
+	int* con = new int[len];
+	for(int i=0;beg < pos;++i,++beg)
+		con[i] = contents[beg];
+
+	return new Intstring(con, len);
+
 }
 
 void Intstring::parseString(std::string& stdstring)

@@ -9,6 +9,7 @@ int main(int argc, char** argv)
 
 	bool saveprog = true;
 	bool savestats = true;
+	bool usetree = true;
 
 	for(int i = 1; i < argc; ++i)
 	{
@@ -29,6 +30,9 @@ int main(int argc, char** argv)
 						case 'p':
 							saveprog = false;
 							break;
+						case 't':
+							usetree =false;
+							break;
 					}
 					break;
 			}
@@ -40,6 +44,6 @@ int main(int argc, char** argv)
 	if(filename.empty())
 		filename = typescreen::selectionscreen();
 
-	typescreen::start(filename,saveprog,savestats);
+	typescreen::start(filename,saveprog,savestats,usetree);
 	return 0;
 }

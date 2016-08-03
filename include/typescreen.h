@@ -9,5 +9,5 @@ namespace typescreen
 	std::string selectionscreen();
 
 	//if filename is empty, display file selection menu
-	void start(std::string filename,bool saveprog,bool savestats);
+	void start(std::string filename,bool saveprog,bool savestats,bool usetree);
 }

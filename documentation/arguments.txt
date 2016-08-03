@@ -2,6 +2,8 @@ Accepted command line arguments:
 
 --s : does not save statistics on exit
 
+--t : disables the use of the wordtree. Using this option enables the use of backspace in the typescrees
+
 --p : does not save progress on exit
 
 -f : loads file named f
