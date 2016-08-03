@@ -4,6 +4,11 @@
 #include <locale.h>
 #include <chrono>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
 #include "Textstream.hpp"
 #include "felocale/Intstring.hpp"
 #include "felocale/encodeconvert.h"
@@ -14,8 +19,18 @@
 namespace typescreen
 {
 
+volatile sig_atomic_t progrunning = 1;
+
+void term(int sigterm)
+{
+	progrunning = 0;
+	endwin();
+}
+
 void init()
 {
+	signal (SIGINT, term);
+
 	setlocale(LC_ALL,"en_US.UTF.8");
 	initscr();
 	cbreak();
@@ -54,7 +69,7 @@ std::string selectionscreen()
 	};
 
 	int c;
-	while(true)
+	while(progrunning)
 	{
 		printfiles();
 		c = getch();
@@ -77,6 +92,9 @@ std::string selectionscreen()
 
 void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 {
+	if(!progrunning)
+		return;
+
 	clear();
 
 	Textstream ts;
@@ -89,8 +107,6 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 
 	//Variables
 	bool timerunning = false;
-	bool progrunning = true;
-
 
 	int keystrokes = 0;
 	int wrongstrokes = 0;
@@ -108,6 +124,8 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	std::string typedword;
 
 	int yval = 0;
+
+	std::mutex printingmutex;
 
 	//Lambdas
 	auto add_widech = [&](int c){
@@ -131,6 +149,7 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	};
 
 	auto printstatus = [&](){
+		printingmutex.lock();
 		if(timerunning)
 		{
 			updatestates();
@@ -144,6 +163,8 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 		{
 			mvprintw(0,0,"Begin Typing to start the time measurement....");
 		}
+		refresh();
+		printingmutex.unlock();
 	};
 
 	auto nextline = [&](){
@@ -166,6 +187,7 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	};
 
 	auto printline = [&](){
+		printingmutex.lock();
 		move(yval,0);
 		int x;
 		for(x = 0; x < tprog; ++x)
@@ -192,6 +214,7 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 		add_widech(0xb6);
 
 		color_set(1,0);
+		printingmutex.unlock();
 	};
 
 	auto doscreen = [&](){
@@ -283,8 +306,20 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 		return a;
 	};
 
+	auto statusthreadloop = [&](){
+		while(progrunning)
+		{
+			printstatus();
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+	};
+
+	std::thread statusthread (statusthreadloop);
+	statusthread.detach();
+
 	nextline();
 	doscreen();
+
 	int c = get_widech();
 	timerunning = true;
 	starttime = std::chrono::high_resolution_clock::now();
@@ -320,6 +355,8 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 
 	curs_set(1);
 	endwin();
+
+	//std::cerr<<"Exiting gracefully..."<<std::endl;
 
 	if(saveprog)
 		ts.saveposition();

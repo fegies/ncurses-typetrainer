@@ -41,14 +41,14 @@ void Wordtree::storeinFile(std::string& filename)
 {
 	std::ofstream outfile(filename);
 
-	std::cerr<<"Writing Wordtree to file: "<<filename<<std::endl;
+	//std::cerr<<"Writing Wordtree to file: "<<filename<<std::endl;
 
 	if(root != 0)
 		root -> serializetostream(outfile);
 
 	outfile.flush();
 
-	std::cerr<<"Finished writing Wordtree."<<std::endl;
+	//std::cerr<<"Finished writing Wordtree."<<std::endl;
 }
 
 void Wordtree::restorefromFile(std::string& filename)
@@ -60,7 +60,7 @@ void Wordtree::restorefromFile(std::string& filename)
 
 	int lcount = std::count(std::istreambuf_iterator<char>(infile),std::istreambuf_iterator<char>(),'\n');
 
-	std::cerr<<"loading Wordtree"<<std::endl<<"Wordstatistics file line count is: "<<lcount<<std::endl;
+	//std::cerr<<"loading Wordtree"<<std::endl<<"Wordstatistics file line count is: "<<lcount<<std::endl;
 
 	infile.seekg(0,std::ios_base::beg);
 
@@ -86,7 +86,7 @@ void Wordtree::restorefromFile(std::string& filename)
 
 	root = buildtree(0, lcount-1);
 
-	std::cerr<<"finished loading Wordtree"<<std::endl;
+	//std::cerr<<"finished loading Wordtree"<<std::endl;
 }
 
 std::string Wordtree::serializetostring()

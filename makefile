@@ -5,7 +5,7 @@ VPATH     = src include
 ODIR      = ./bin
 SHAREFLAGS= -g -pipe
 CFLAGS    = $(SHAREFLAGS) -std=c++11 -Wall
-LINKFLAGS = $(SHAREFLAGS)
+LINKFLAGS = $(SHAREFLAGS) -lpthread
 COMPILER  = g++
 
 #Name of subpaths inside Odir (Must be the same in ./include and ./src as well)
