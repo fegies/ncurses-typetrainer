@@ -9,6 +9,7 @@ class Wordtree;
 
 /*
 	A node in a wordtree
+	Can contain another Wordtree (Variants)
 */
 
 class Word
@@ -20,11 +21,12 @@ public:
 	Word(std::string& name, Wordtree* wrongvariants, int number);
 	//copies everything but the children
 	Word(Word& oldword);
-	~Word();
 
 	//These should only be used in the context of tree Construction from a file
 	Word(Word* newleft, std::string& line);
 	Word(Word* newleft, std::string& name, int newnum);
+	
+	~Word();
 
 	void assignRight(Word * newright);
 	void assignLeft(Word* newleft);
@@ -34,11 +36,11 @@ public:
 	Word& operator= (Word& nw);
 
 	void insert(std::string& insertword);
-
 	void insertError(std::string& correctword, std::string& variation);
 
+	//for the main Tree
 	void serializetostream(std::ofstream& s);
-
+	//for the subtree
 	std::string serializetostring();
 
 	//merges the numbers and subtree of w into the word executing
@@ -46,7 +48,6 @@ public:
 	void merge(Word* w);
 
 	std::string& getContent();
-
 	Word* getLeft();
 	Word* getRight();
 	int getNumber();

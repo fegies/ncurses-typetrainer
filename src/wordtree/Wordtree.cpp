@@ -23,7 +23,6 @@ Wordtree::~Wordtree()
 
 void Wordtree::insert(std::string& word)
 {
-	//std::cerr<<"Inserting word: "<<word<<std::endl;
 	if( root == 0 )
 		root = new Word(word, true);
 	else
@@ -32,7 +31,6 @@ void Wordtree::insert(std::string& word)
 
 void Wordtree::insertError(std::string& correctword, std::string& variation)
 {
-	//std::cerr<<"Inserting error: "<<variation<<" of word: "<<correctword<<std::endl;
 	if( root == 0 )
 		root = new Word(correctword,false);
 	root -> insertError(correctword,variation);
@@ -42,14 +40,10 @@ void Wordtree::storeinFile(std::string& filename)
 {
 	std::ofstream outfile(filename);
 
-	//std::cerr<<"Writing Wordtree to file: "<<filename<<std::endl;
-
 	if(root != 0)
 		root -> serializetostream(outfile);
 
 	outfile.flush();
-
-	//std::cerr<<"Finished writing Wordtree."<<std::endl;
 }
 
 void Wordtree::restorefromFile(std::string& filename)
@@ -59,9 +53,8 @@ void Wordtree::restorefromFile(std::string& filename)
 	if(!infile.is_open())
 		return;
 
+	//count the lines in the file (the number of words in the main tree)
 	int lcount = std::count(std::istreambuf_iterator<char>(infile),std::istreambuf_iterator<char>(),'\n');
-
-	//std::cerr<<"loading Wordtree"<<std::endl<<"Wordstatistics file line count is: "<<lcount<<std::endl;
 
 	infile.seekg(0,std::ios_base::beg);
 
@@ -101,7 +94,7 @@ std::string Wordtree::serializetostring()
 void Wordtree::trimToErrors()
 {
 	//returns true if the Node shall be deleted
-	//bottom up approach
+	//bottom up approach to avoid pointer Madness
 	std::function<bool (Word*)> traverseTree = [&](Word* w){
 		if( w == 0 )
 			return false;
@@ -183,6 +176,26 @@ int Wordtree::size()
 	return subtreeSize(root);
 }
 
+int Wordtree::countWords(bool includeErrors)
+{
+	std::function<int (Word*)> traverseTree = [&](Word* w){
+		if( w == 0)
+			return 0;
+
+		int count = w -> getNumber();
+
+		if( includeErrors && (w -> getVariationTree()) != 0)
+			count += w -> getVariationTree() -> countWords(false);
+
+		count += traverseTree(w -> getLeft());
+		count += traverseTree(w -> getRight());
+
+		return count;
+	};
+
+	return traverseTree(root);
+}
+
 Wordtree* Wordtree::copy()
 {
 	Wordtree* newt = new Wordtree;
@@ -193,6 +206,7 @@ Wordtree* Wordtree::copy()
 		traverseTree( ( w-> getRight()) );
 		newt -> minsert( new Word(*w) );
 	};
+	return newt;
 }
 
 void Wordtree::merge(Wordtree* tomerge)
@@ -231,6 +245,7 @@ void Wordtree::deleteNode(Word* w, Word* parent)
 	if( w == 0 )
 		return;
 
+	//unlink w by changing the reference from parent to the right child
 	if((w -> getLeft()) == 0)
 	{
 		if(parent == 0)
@@ -240,6 +255,7 @@ void Wordtree::deleteNode(Word* w, Word* parent)
 		else if((parent -> getRight()) == w)
 			parent -> assignRight((w -> getRight()));
 	}
+	//as above, only mirrored
 	else if((w -> getRight()) == 0)
 	{
 		if(parent == 0)
@@ -250,6 +266,8 @@ void Wordtree::deleteNode(Word* w, Word* parent)
 			parent -> assignRight((w -> getLeft()));
 	}
 	else{
+		//find an entry in the middle, copy its contents over and delete the now doube enty
+		//instead of w. This node is guaranteed to have at least one free child
 		parent = w;
 		Word* p = (w -> getRight());
 		while ((p -> getLeft()) != 0)

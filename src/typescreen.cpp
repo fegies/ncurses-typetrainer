@@ -25,6 +25,7 @@ void term(int sigterm)
 {
 	progrunning = 0;
 	endwin();
+	std::cout<<"Press enter to terminate..."<<std::endl;
 }
 
 void init()
@@ -104,6 +105,7 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 
 	Wordtree errortree;
 	std::string treefilename="wordstat.stat";
+	
 	if(usetree)
 		errortree.restorefromFile(treefilename);
 

@@ -1,6 +1,10 @@
 #pragma once
 #include <string>
 
+/*
+	Functions related to Word manipulation
+*/
+
 namespace wordtree
 {
 

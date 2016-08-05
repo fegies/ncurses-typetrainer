@@ -42,6 +42,7 @@ public:
 
 	//incorporates the Wordnumbers saved in the tree
 	//if IncludeErrors is set, also adds the number of Words in the variations Subtree
+	//could be smallet than size() if a lot of words have the number 0
 	int countWords(bool includeErrors);
 
 	Wordtree* copy();

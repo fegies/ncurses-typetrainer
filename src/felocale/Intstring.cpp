@@ -30,8 +30,10 @@ Intstring::Intstring(std::string& stdstring)
 
 Intstring& Intstring::operator= (std::string& stdstring)
 {
+	//parsestring allocates a new int*, so this must be done to avoid memory leaks
 	if(slength > 0)
 		delete[] contents;
+
 	parseString(stdstring);
 	return *this;
 }
@@ -68,11 +70,13 @@ Intstring* Intstring::getWordBefore(int pos)
 	if(pos > slength)
 		pos = slength;
 
+	//find the beginning of the word
 	int beg = pos-1;
 	while (beg >= 0 && contents[beg]!=' ')
 		--beg;
 	++beg;
 	
+	//copy the found word over
 	int len = pos - beg;
 	int* con = new int[len];
 	for(int i=0;beg < pos;++i,++beg)
@@ -85,6 +89,7 @@ Intstring* Intstring::getWordBefore(int pos)
 void Intstring::parseString(std::string& stdstring)
 {
 	slength = stdstring.length();
+	//A bit more space than needed is allocated, but that does not really matter
 	contents = new int [slength];
 	char cc;
 	int c;

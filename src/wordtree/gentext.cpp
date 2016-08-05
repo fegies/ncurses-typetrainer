@@ -13,11 +13,11 @@ void gentext(std::string& filename)
 	Wordtree * wt = new Wordtree;
 	wt->restorefromFile(tfname);
 	wt->trimToErrors();
-//	wt.storeinFile(ofname1);
+	wt->storeinFile(ofname1);
 	Wordtree* trimmt = wt->trimPunctuation();
-	delete wt;
 	trimmt -> storeinFile(ofname2);
 	delete trimmt;
+	delete wt;
 }
 
 }

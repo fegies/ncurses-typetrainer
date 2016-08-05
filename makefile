@@ -4,7 +4,7 @@ PROG      = typetrainer
 VPATH     = src include
 ODIR      = ./bin
 SHAREFLAGS= -g -pipe -O2
-CFLAGS    = $(SHAREFLAGS) -std=c++11 -Wall
+CFLAGS    = $(SHAREFLAGS) -std=c++11
 LINKFLAGS = $(SHAREFLAGS) -lpthread -lncursesw
 COMPILER  = g++
 
@@ -19,7 +19,7 @@ FELOCALOBS = Intstring.o encodeconvert.o
 WORDTREEOBS= Wordtree.o Word.o gentext.o stripstring.o
 
 OPROG = $(addprefix $(ODIR)/, $(PROG))
-RUNFLAGS = -g customtext.txt
+RUNFLAGS =
 
 
 run : all

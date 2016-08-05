@@ -50,7 +50,6 @@ Word::Word(Word* newleft, std::string& line)
 	content = new std::string;
 	ss >> *content;
 	ss >> number;
-	//std::cerr<<"Adding Word named: "<<*content<<" numbered: "<<number<<std::endl;
 
 	wrongvariants = 0;
 
@@ -61,13 +60,13 @@ Word::Word(Word* newleft, std::string& line)
 
 		int tcount = std::count(std::istreambuf_iterator<char>(ss),std::istreambuf_iterator<char>(),' ');
 
-		//std::cerr<<"Additional tokens detected: "<<tcount<<std::endl;
 
 		ss.seekg(spos);
 
 		int newnum;
 		std::string newname;
 
+		// A vary similar Treebuilding Lambda to the one found in Wordtree.cpp
 		std::function<Word* (int,int)> buildtree = [&](int l, int r){
 			if(l > r)
 				return (Word*)0;
@@ -78,8 +77,6 @@ Word::Word(Word* newleft, std::string& line)
 	
 			ss >> newname;
 			ss >> newnum;
-
-			//std::cerr<<"adding variation named: "<<newname<<" numbered: "<<newnum<<std::endl;
 
 			Word * node = new Word(lc, newname, newnum);
 	
