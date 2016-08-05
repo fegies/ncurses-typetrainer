@@ -1,6 +1,7 @@
 #include <string>
-#include "typescreen.h"
 #include <iostream>
+#include "typescreen.h"
+#include "wordtree/gentext.h"
 
 void printhelp()
 {
@@ -9,6 +10,7 @@ void printhelp()
 	cout << "Accepted arguments:"<<endl<<endl;
 	cout << "-? -h     : print this message"<<endl;
 	cout << "-f [file] : Skip the text selection dialog and and load the specified file instead"<<endl;
+	cout << "-g [file] : generate a custom pactice text and save it in [file]"<<endl;
 	cout << "--s       : do not save statistics about errors in percent and keystrokes per minute"<<endl;
 	cout << "--p       : do not load and save typing progress"<<endl;
 	cout << "--t       : do not use the errorstatistics tree"<<endl;
@@ -23,6 +25,8 @@ int main(int argc, char** argv)
 	bool savestats = true;
 	bool usetree = true;
 
+	bool gentextmode = false;
+
 	for(int i = 1; i < argc; ++i)
 	{
 		if(argv[i][0] == '-')
@@ -33,6 +37,8 @@ int main(int argc, char** argv)
 				case 'h':
 					printhelp();
 					return 0;
+				case 'g':
+					gentextmode = true;
 				case 'f':
 					if(i < argc-1)
 						filename = argv[++i];
@@ -53,6 +59,14 @@ int main(int argc, char** argv)
 					break;
 			}
 		}
+	}
+
+	if(gentextmode)
+	{
+		if(filename.empty())
+			filename = "texts/customtext";
+		wordtree::gentext(filename);
+		return 0;
 	}
 
 	typescreen::init();

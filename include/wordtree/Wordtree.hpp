@@ -27,6 +27,21 @@ public:
 
 	std::string serializetostring();
 
+	//removes all words without variations from the tree
+	void trimToErrors();
+
+	Word* find(std::string& word);
+
+	//returns the number of entries in the tree
+	int size();
+
+	//merges tree into the tree executing the method
+	void merge(Wordtree* tree);
+
 private:
+
+	//if parent = 0 it is a root deletion
+	void deleteNode(Word* victim, Word* parent);
+
 	Word* root;
 };

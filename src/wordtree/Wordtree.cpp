@@ -96,3 +96,157 @@ std::string Wordtree::serializetostring()
 	else
 		return "";
 }
+
+void Wordtree::trimToErrors()
+{
+	//returns true if the Node shall be deleted
+	//bottom up approach
+	std::function<bool (Word*)> traverseTree = [&](Word* w){
+		if( w == 0 )
+			return false;
+
+		Word* child = (w -> getLeft());
+		if( traverseTree(child) )
+			deleteNode(child,w);
+		child = (w -> getRight());
+		if( traverseTree(child) )
+			deleteNode(child,w);
+
+		return !(w -> hasVariations());
+	};
+
+	if(traverseTree(root))
+		deleteNode(root,0);
+}
+
+Word* Wordtree::find(std::string& fword)
+{
+	std::function<Word* (Word*)> traverseTree = [&](Word* w){
+		if( w == 0 )
+			return (Word*) 0;
+		int c = fword.compare(w -> getContent());
+		if( c == 0 )
+			return w;
+		else if( c < 0 )
+			return traverseTree((w -> getLeft()));
+		else
+			return traverseTree((w -> getRight()));
+	};
+
+	return traverseTree(root);
+}
+
+int Wordtree::size()
+{
+	std::function<int (Word*)> subtreeSize = [&](Word* w){
+		if( w == 0 )
+			return 0;
+		int count = 1;
+		count += subtreeSize(w -> getLeft());
+		count += subtreeSize(w -> getRight());
+		return count;
+	};
+
+	return subtreeSize(root);
+}
+
+void Wordtree::merge(Wordtree* tomerge)
+{
+	if(tomerge == 0)
+		return;
+
+	//inserts the Word into the tree
+	auto minsert = [&](Word* toinsert){
+		int c;
+		Word* wp = root;
+		while(wp != 0)
+		{
+			c = (toinsert -> getContent()).compare((wp-> getContent()));
+			if( c == 0 )
+			{
+				std::cerr<<"Tree Corruption..."<<std::endl;
+				exit(1);
+			}
+			else if( c < 0 )
+			{
+				if( (wp -> getLeft()) == 0 )
+					wp -> assignLeft(toinsert);
+				else
+					wp = (wp -> getLeft());
+			}
+			else{
+				if( (wp -> getRight()) == 0 )
+					wp -> assignRight(toinsert);
+				else
+					wp = (wp -> getRight());
+			}
+		}
+	};
+
+	std::function<void (Word*)> traverseForeignTree = [&](Word* w){
+		if( w == 0 )
+			return;
+
+		traverseForeignTree(w -> getLeft());
+		traverseForeignTree(w -> getRight());
+
+		Word* p = find( w -> getContent() );
+		if( p == 0 )
+		{
+			if( (w -> getLeft()) != 0)
+				delete ( w -> getLeft());
+			w -> assignLeft(0);
+
+			if( (w -> getRight()) != 0)
+				delete (w -> getRight());
+			w -> assignRight(0);
+			minsert( w );
+		}
+		else
+			p -> merge(w);
+	};
+
+	traverseForeignTree((tomerge -> root));
+}
+
+void Wordtree::deleteNode(Word* w, Word* parent)
+{
+	if( w == 0 )
+		return;
+
+	if((w -> getLeft()) == 0)
+	{
+		if(parent == 0)
+			root = (w -> getRight());
+		else if((parent -> getLeft()) == w)
+			parent -> assignLeft((w -> getRight()));
+		else if((parent -> getRight()) == w)
+			parent -> assignRight((w -> getRight()));
+	}
+	else if((w -> getRight()) == 0)
+	{
+		if(parent == 0)
+			root = (w -> getLeft());
+		else if((parent -> getLeft()) == w)
+			parent -> assignLeft((w -> getLeft()));
+		else if((parent -> getRight()) == w)
+			parent -> assignRight((w -> getLeft()));
+	}
+	else{
+		parent = w;
+		Word* p = (w -> getRight());
+		while ((p -> getLeft()) != 0)
+		{
+			parent = p;
+			p = (p -> getLeft());
+		}
+		*w = *p;
+		deleteNode(p,parent);
+		return;
+	}
+
+	//We don't want the deconstructor to remove the subtrees
+	w -> assignLeft(0);
+	w -> assignRight(0);
+	delete w;
+}

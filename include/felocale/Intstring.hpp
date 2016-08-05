@@ -10,10 +10,12 @@ class Intstring
 public:
 	Intstring();
 	Intstring(std::string& toencode);
+	Intstring(const char* cstr);
 	Intstring(int* chars,int length);
 	~Intstring();
 
 	Intstring& operator=(std::string& stdstring);
+	Intstring& operator=(const char* cstr);
 
 	//returns the char at the specified position
 	int at(int pos);

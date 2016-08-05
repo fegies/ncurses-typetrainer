@@ -87,6 +87,27 @@ void Word::assignRight(Word* newright)
 	right = newright;
 }
 
+void Word::assignLeft(Word* newleft)
+{
+	left = newleft;
+}
+
+Word& Word::operator= (Word& newword)
+{
+	number = newword.number;
+
+	if(content != 0)
+		delete content;
+	content = newword.content;
+	newword.content = 0;
+
+	if(wrongvariants != 0)
+		delete wrongvariants;
+	wrongvariants = newword.wrongvariants;
+	newword.wrongvariants = 0;
+	return *this;
+}
+
 void Word::insert(std::string& insertword)
 {
 	int i = insertword.compare(*content);
@@ -162,4 +183,36 @@ std::string Word::serializetostring()
 		ss.append(" " + right -> serializetostring());
 
 	return ss;
+}
+
+void Word::merge( Word* w )
+{
+	if( w == 0 )
+		return;
+
+	number += (w -> number);
+	if( wrongvariants == 0 )
+		wrongvariants = (w -> wrongvariants);
+	else
+		wrongvariants->merge((w -> wrongvariants));
+}
+
+std::string& Word::getContent()
+{
+	return *content;
+}
+
+Word* Word::getLeft()
+{
+	return left;
+}
+
+Word* Word::getRight()
+{
+	return right;
+}
+
+bool Word::hasVariations()
+{
+	return ((wrongvariants != 0) && (wrongvariants->size() > 0));
 }

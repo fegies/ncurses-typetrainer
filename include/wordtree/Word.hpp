@@ -22,7 +22,12 @@ public:
 	//These should only be used in the context of tree Construction from a file
 	Word(Word* newleft, std::string& line);
 	Word(Word* newleft, std::string& name, int newnum);
+
 	void assignRight(Word * newright);
+	void assignLeft(Word* newleft);
+
+	//Sets values of nw to 0 to avoid their destruction
+	Word& operator= (Word& nw);
 
 	void insert(std::string& insertword);
 
@@ -31,6 +36,17 @@ public:
 	void serializetostream(std::ofstream& s);
 
 	std::string serializetostring();
+
+	//merges the numbers and subtree of w into the word executing
+	//name and children are unaffected
+	void merge(Word* w);
+
+	std::string& getContent();
+
+	Word* getLeft();
+	Word* getRight();
+
+	bool hasVariations();
 
 private:
 

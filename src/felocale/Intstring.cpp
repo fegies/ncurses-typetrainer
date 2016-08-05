@@ -11,6 +11,12 @@ Intstring::~Intstring()
 		delete[] contents;
 }
 
+Intstring::Intstring(const char* cstr)
+{
+	std::string stdstr = cstr;
+	parseString(stdstr);
+}
+
 Intstring::Intstring(int* chars, int length)
 {
 	slength = length;
@@ -28,6 +34,12 @@ Intstring& Intstring::operator= (std::string& stdstring)
 		delete[] contents;
 	parseString(stdstring);
 	return *this;
+}
+
+Intstring& Intstring::operator= (const char* cstr)
+{
+	std::string stdstr = cstr;
+	return operator=(stdstr);
 }
 
 int Intstring::at(int pos)
