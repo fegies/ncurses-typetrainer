@@ -8,42 +8,41 @@ namespace wordtree
 
 void stripPunctuation(std::string& tostrip)
 {
-	Intstring puncts = "\"';,.?-!*„“”—";
+	Intstring puncts = "\"';`:,.?()~-!*„“”—";
 	Intstring word = tostrip;
 
-	bool containspunct = false;
-	bool * removechar = new bool [word.length()];
+	bool needsstripping = false;
+	bool ignorethis[word.length()];
 
-	for(int a,i = 0; i < word.length(); ++i)
+	for(int b,a = 0 ; a < word.length(); ++a )
 	{
-		removechar[i] = false;
-		for( a = 0; a < puncts.length(); ++a )
+		ignorethis[a] = false;
+		for(b = 0; b < puncts.length(); ++b)
 		{
-			if(word.at(i) == puncts.at(a))
+			if(word.at(a) == puncts.at(b))
 			{
-				containspunct = true;
-				removechar[i] = true;
+				needsstripping = true;
+				ignorethis[a] = true;
 				break;
 			}
 		}
 	}
 
-	if( containspunct )
+	if(! needsstripping)
+		return;
+
+	tostrip.clear();
+	char bytes[5];
+	bytes[4] = 0;
+	for( int i = 0; i < word.length(); ++i )
 	{
-		tostrip.clear();
-		char a,bytes[5];
-		bytes[4] = 0;
-
-		for(int i = 0; i < word.length(); ++i)
-		{
-			for( a = 0; a < 4 ; ++a )
-				bytes[a] = 0;
-			felocale::to_utf8(word.at(i),bytes);
-			tostrip.append(bytes);
-		}
+		if(ignorethis[i])
+			continue;
+		for(char a = 0; a < 4; ++a)
+			bytes[a] = 0;
+		felocale::to_utf8(word.at(i),bytes);
+		tostrip.append(bytes);
 	}
-
-	delete[] removechar;
 }
 
 }

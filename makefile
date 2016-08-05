@@ -25,6 +25,9 @@ RUNFLAGS = -g customtext.txt
 run : all
 	$(OPROG) $(RUNFLAGS)
 
+flagless: all
+	$(OPROG)
+
 all : buildbin $(OPROG)
 
 debug: all
@@ -34,7 +37,7 @@ clean:
 	find bin -name '*.o' -delete
 	rm -f $(OPROG)
 
-.PHONY: run all clean debug
+.PHONY: run all clean debug flagless
 
 #linking
 $(OPROG): $(addprefix $(ODIR)/, $(OBJS))

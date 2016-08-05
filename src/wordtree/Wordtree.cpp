@@ -3,6 +3,7 @@
 #include <functional>
 #include <fstream>
 #include <iostream>
+#include "wordtree/stripstring.h"
 
 Wordtree::Wordtree()
 {
@@ -119,21 +120,53 @@ void Wordtree::trimToErrors()
 		deleteNode(root,0);
 }
 
-Word* Wordtree::find(std::string& fword)
+Wordtree* Wordtree::trimPunctuation()
 {
-	std::function<Word* (Word*)> traverseTree = [&](Word* w){
+	Wordtree* newt = new Wordtree;
+
+	std::function<void (Word*)> traverseTree = [&](Word* w){
 		if( w == 0 )
-			return (Word*) 0;
-		int c = fword.compare(w -> getContent());
-		if( c == 0 )
-			return w;
-		else if( c < 0 )
-			return traverseTree((w -> getLeft()));
+			return;
+
+		std::string strippedword = w -> getContent();
+		wordtree::stripPunctuation(strippedword);
+		Word* ntw = (newt -> find(strippedword));
+		if( ntw == 0 )
+		{
+			Wordtree* vart = w -> getVariationTree();
+			if (vart != 0)
+				vart = (vart -> trimPunctuation());
+			ntw = new Word(strippedword, vart, w -> getNumber());
+			newt -> minsert(ntw);
+		}
 		else
-			return traverseTree((w -> getRight()));
+		{
+			ntw -> merge( w );
+		}
+		traverseTree( w -> getLeft() );
+		traverseTree( w -> getRight() );
 	};
 
-	return traverseTree(root);
+	traverseTree(root);
+
+	return newt;
+}
+
+Word* Wordtree::find(std::string& fword)
+{
+	int c;
+	Word* w = root;
+	while (w != 0)
+	{
+		c = fword.compare((w -> getContent()));
+		if(c == 0)
+			break;
+		else if( c < 0 )
+			w = (w -> getLeft());
+		else
+			w = (w -> getRight());
+	}
+	return w;
 }
 
 int Wordtree::size()
@@ -150,38 +183,22 @@ int Wordtree::size()
 	return subtreeSize(root);
 }
 
+Wordtree* Wordtree::copy()
+{
+	Wordtree* newt = new Wordtree;
+	std::function<void (Word*)> traverseTree = [&](Word* w){
+		if( w == 0 )
+			return;
+		traverseTree( ( w-> getLeft()) );
+		traverseTree( ( w-> getRight()) );
+		newt -> minsert( new Word(*w) );
+	};
+}
+
 void Wordtree::merge(Wordtree* tomerge)
 {
 	if(tomerge == 0)
 		return;
-
-	//inserts the Word into the tree
-	auto minsert = [&](Word* toinsert){
-		int c;
-		Word* wp = root;
-		while(wp != 0)
-		{
-			c = (toinsert -> getContent()).compare((wp-> getContent()));
-			if( c == 0 )
-			{
-				std::cerr<<"Tree Corruption..."<<std::endl;
-				exit(1);
-			}
-			else if( c < 0 )
-			{
-				if( (wp -> getLeft()) == 0 )
-					wp -> assignLeft(toinsert);
-				else
-					wp = (wp -> getLeft());
-			}
-			else{
-				if( (wp -> getRight()) == 0 )
-					wp -> assignRight(toinsert);
-				else
-					wp = (wp -> getRight());
-			}
-		}
-	};
 
 	std::function<void (Word*)> traverseForeignTree = [&](Word* w){
 		if( w == 0 )
@@ -249,4 +266,39 @@ void Wordtree::deleteNode(Word* w, Word* parent)
 	w -> assignLeft(0);
 	w -> assignRight(0);
 	delete w;
+}
+
+void Wordtree::minsert(Word* toinsert)
+{
+	if( root == 0 )
+	{
+		root = toinsert;
+		return;
+	}
+
+	int c;
+	Word* wp = root;
+	while(wp != 0)
+	{
+		c = (toinsert -> getContent()).compare((wp-> getContent()));
+		if( c == 0 )
+		{
+			return;
+			std::cerr<<"Tree Corruption with "<<toinsert->getContent()<<" already in the tree:"<<std::endl;
+			exit(1);
+		}
+		else if( c < 0 )
+		{
+			if( (wp -> getLeft()) == 0 )
+				wp -> assignLeft(toinsert);
+			else
+				wp = (wp -> getLeft());
+		}
+		else{
+			if( (wp -> getRight()) == 0 )
+				wp -> assignRight(toinsert);
+			else
+				wp = (wp -> getRight());
+		}
+	}
 }

@@ -17,6 +17,9 @@ public:
 	//if insrtioncounts is false it sets number to 0 not 1
 	//used when a word is mistyped that was never typed correctly before.
 	Word(std::string& name,bool insertioncounts);
+	Word(std::string& name, Wordtree* wrongvariants, int number);
+	//copies everything but the children
+	Word(Word& oldword);
 	~Word();
 
 	//These should only be used in the context of tree Construction from a file
@@ -27,6 +30,7 @@ public:
 	void assignLeft(Word* newleft);
 
 	//Sets values of nw to 0 to avoid their destruction
+	//more of a move and less of a copy operator
 	Word& operator= (Word& nw);
 
 	void insert(std::string& insertword);
@@ -45,6 +49,8 @@ public:
 
 	Word* getLeft();
 	Word* getRight();
+	int getNumber();
+	Wordtree* getVariationTree();
 
 	bool hasVariations();
 

@@ -25,23 +25,36 @@ public:
 
 	void restorefromFile(std::string& filename);
 
+	//Intended for the Variations Subtree
 	std::string serializetostring();
 
 	//removes all words without variations from the tree
 	void trimToErrors();
+
+	//merges all Words that differ only by Punctuation
+	//returns a NEW Wordtree
+	Wordtree* trimPunctuation();
 
 	Word* find(std::string& word);
 
 	//returns the number of entries in the tree
 	int size();
 
+	//incorporates the Wordnumbers saved in the tree
+	//if IncludeErrors is set, also adds the number of Words in the variations Subtree
+	int countWords(bool includeErrors);
+
+	Wordtree* copy();
+
 	//merges tree into the tree executing the method
 	void merge(Wordtree* tree);
 
 private:
+	void minsert(Word* toinsert);
 
 	//if parent = 0 it is a root deletion
 	void deleteNode(Word* victim, Word* parent);
+
 
 	Word* root;
 };

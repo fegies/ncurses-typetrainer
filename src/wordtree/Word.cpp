@@ -15,6 +15,24 @@ Word::Word(std::string& newstring, bool insertioncounts)
 	wrongvariants = 0;
 }
 
+Word::Word(std::string& newstring, Wordtree* argtree, int newnum)
+{
+	number = newnum;
+	left = 0;
+	right = 0;
+	content = new std::string(newstring);
+	wrongvariants = argtree;
+}
+
+Word::Word(Word& oldword)
+{
+	number = (oldword.number);
+	left = 0;
+	right = 0;
+	content = new std::string(*oldword.content);
+	wrongvariants = (oldword.wrongvariants == 0)? 0 : (oldword.wrongvariants->copy());
+}
+
 Word::~Word()
 {
 	if(left != 0)
@@ -210,6 +228,16 @@ Word* Word::getLeft()
 Word* Word::getRight()
 {
 	return right;
+}
+
+int Word::getNumber()
+{
+	return number;
+}
+
+Wordtree* Word::getVariationTree()
+{
+	return wrongvariants;
 }
 
 bool Word::hasVariations()
