@@ -1,7 +1,7 @@
 #pragma once
 
-class Word;
-#include "wordtree/Word.hpp"
+#include <string>
+#include <functional>
 
 /*
 	A binary Search Tree containing all words in a text and the number of times they were typed correctly,
@@ -12,28 +12,33 @@ class Wordtree
 {
 public:
 
+	struct Word
+	{
+		std::string* content;
+		int number;
+		Word* parent;
+		Word* left;
+		Word* right;
+		Wordtree* variationTree;
+	};
+
 	//true if it is the Tree for the correct words, false otherwise.
 	Wordtree();
-	Wordtree(Word* root);
 	~Wordtree();
 
 	void insert(std::string& word);
-
 	void insertError(std::string& correctword, std::string& variation);
 
 	void storeinFile(std::string& filename);
 
 	void restorefromFile(std::string& filename);
 
-	//Intended for the Variations Subtree
-	std::string serializetostring();
-
 	//removes all words without variations from the tree
 	void trimToErrors();
 
 	//merges all Words that differ only by Punctuation
 	//returns a NEW Wordtree
-	Wordtree* trimPunctuation();
+	void trimPunctuation();
 
 	Word* find(std::string& word);
 
@@ -45,17 +50,34 @@ public:
 	//could be smallet than size() if a lot of words have the number 0
 	int countWords(bool includeErrors);
 
+	//returns the Sum of countWords(false) of all subtrees
+	int countErrors();
+
 	Wordtree* copy();
 
 	//merges tree into the tree executing the method
 	void merge(Wordtree* tree);
 
 private:
-	void minsert(Word* toinsert);
-
-	//if parent = 0 it is a root deletion
-	void deleteNode(Word* victim, Word* parent);
-
 
 	Word* root;
+
+	void insertNode(Word* toinsert);
+
+	//takes a function to execute for every Word in the tree
+	//Descends into both Subtrees before executing the Action.
+	int serialTreeWalk(Word* w,std::function<int (Word*)> action);
+
+	//rebuild the Wordtree
+	Word* buildtree(int left,int right,std::function<Word* ()> nextNode);
+	void restoreFromString(std::string s);
+
+	//if parent = 0 it is a root deletion
+	//if delete is true, Word victim is deleted. Otherwise it is only unlinked and can be
+	//used in another Tree.
+	void unlinkNode(Word* victim,bool deleteNode);
+
+	//Intended for the Variations Subtree
+	std::string serializetostring();
+
 };

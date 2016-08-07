@@ -14,9 +14,6 @@ void gentext(std::string& filename)
 	wt->restorefromFile(tfname);
 	wt->trimToErrors();
 	wt->storeinFile(ofname1);
-	Wordtree* trimmt = wt->trimPunctuation();
-	trimmt -> storeinFile(ofname2);
-	delete trimmt;
 	delete wt;
 }
 

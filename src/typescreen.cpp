@@ -360,6 +360,8 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	curs_set(1);
 	endwin();
 
+	delete correctness;
+
 	//std::cerr<<"Exiting gracefully..."<<std::endl;
 
 	if(saveprog)

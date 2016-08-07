@@ -6,7 +6,7 @@ ODIR      = ./bin
 SHAREFLAGS= -g -pipe -O2
 CFLAGS    = $(SHAREFLAGS) -std=c++11
 LINKFLAGS = $(SHAREFLAGS) -lpthread -lncursesw
-COMPILER  = g++
+COMPILER  = $(CXX)
 
 #Name of subpaths inside Odir (Must be the same in ./include and ./src as well)
 SUBPATHS  = . felocale wordtree
@@ -16,7 +16,7 @@ OBJS      = $(BASEOBS) $(addprefix felocale/, $(FELOCALOBS)) $(addprefix wordtre
 
 BASEOBS    = main.o typescreen.o Textstream.o statsave.o dirlist.o
 FELOCALOBS = Intstring.o encodeconvert.o
-WORDTREEOBS= Wordtree.o Word.o gentext.o stripstring.o
+WORDTREEOBS= Wordtree.o gentext.o stripstring.o
 
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 RUNFLAGS =

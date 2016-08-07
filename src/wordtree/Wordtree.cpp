@@ -1,292 +1,137 @@
 #include "wordtree/Wordtree.hpp"
-#include <algorithm>
-#include <functional>
+
 #include <fstream>
 #include <iostream>
-#include "wordtree/stripstring.h"
+#include <sstream>
+#include <algorithm>
 
 Wordtree::Wordtree()
 {
 	root = 0;
 }
 
-Wordtree::Wordtree(Word* newroot)
-{
-	root = newroot;
-}
-
 Wordtree::~Wordtree()
 {
-	if(root != 0)
-		delete root;
+	std::function<int (Word*)> del = [&](Word* w){
+		if( (w-> content) != 0 )
+			delete (w-> content);
+		if( (w-> variationTree) != 0 )
+			delete (w -> variationTree);
+		delete w;
+		return 0;
+	};
+
+	serialTreeWalk (root, del);
 }
 
 void Wordtree::insert(std::string& word)
 {
-	if( root == 0 )
-		root = new Word(word, true);
+	Word* w = find(word);
+	if ( w == 0 )
+	{
+		w = new Word {new std::string(word),1,0,0,0,0};
+		insertNode( w );
+	}
 	else
-		root -> insert(word);
+		++( w -> number );
 }
 
 void Wordtree::insertError(std::string& correctword, std::string& variation)
 {
-	if( root == 0 )
-		root = new Word(correctword,false);
-	root -> insertError(correctword,variation);
+	Word* w = find(correctword);
+	if ( w == 0)
+	{
+		w = new Word {new std::string(correctword),0,0,0,0,0};
+		insertNode(w);
+	}
+	w -> variationTree-> insert(variation);
 }
 
 void Wordtree::storeinFile(std::string& filename)
 {
-	std::ofstream outfile(filename);
+	std::ofstream os (filename);
 
-	if(root != 0)
-		root -> serializetostream(outfile);
+	std::function<int (Word*)> addLine = [&](Word* w){
+		os << *(w -> content) << " " << w -> number;
+		if( (w-> variationTree) != 0)
+			os << w -> variationTree -> serializetostring();
+		os << std::endl;
+		return 0;
+	};
 
-	outfile.flush();
+	serialTreeWalk(root,addLine);
+
+	os.flush();
 }
 
 void Wordtree::restorefromFile(std::string& filename)
 {
 	std::ifstream infile(filename);
-
-	if(!infile.is_open())
+	if( !infile.is_open())
 		return;
 
-	//count the lines in the file (the number of words in the main tree)
-	int lcount = std::count(std::istreambuf_iterator<char>(infile),std::istreambuf_iterator<char>(),'\n');
+	int count = std::count(std::istreambuf_iterator<char>(infile),std::istreambuf_iterator<char>(),'\n');
 
 	infile.seekg(0,std::ios_base::beg);
 
-	std::string line;
+	std::function<Word* ()> nextMainTreeNode = [&](){
+		Word* w = new Word{0,0,0,0,0,0};
 
-	//Bottom up Tree building lambda
-	std::function<Word* (int,int)> buildtree = [&](int left,int right){
-
-		if (left > right)
-			return (Word*)0;
-
-		int mid = left + ((right -left) / 2);
-
-		Word * leftchild = buildtree(left, mid-1);
-
+		std::string line;
 		std::getline(infile,line);
-		Word * node = new Word(leftchild,line);
+		std::stringstream ss(line);
 
-		node -> assignRight(buildtree(mid+1,right));
+		w -> content = new std::string;
+		ss >> *(w -> content);
+		ss >> (w -> number);
 
-		return node;
+		if(!ss.eof())
+		{
+			int spos = ss.tellg();
+			int count = std::count(std::istreambuf_iterator<char>(ss),std::istreambuf_iterator<char>(),' ');
+			ss.seekg(spos);
+
+			std::function<Word* ()> nextSubtreeNode = [&](){
+				Word* w = new Word{0,0,0,0,0,0};
+				w -> content = new std::string;
+				ss >> *(w -> content);
+				ss >> (w -> number);
+				return w;
+			};
+
+			Wordtree* subtree = new Wordtree;
+			subtree -> root = buildtree(0,(count/2)-1,nextSubtreeNode);
+			w -> variationTree = subtree;
+		}
+		return w;
 	};
 
-	root = buildtree(0, lcount-1);
-
-	//std::cerr<<"finished loading Wordtree"<<std::endl;
-}
-
-std::string Wordtree::serializetostring()
-{
-	if (root != 0)
-		return root -> serializetostring();
-	else
-		return "";
+	root = buildtree (0,count-1,nextMainTreeNode);
 }
 
 void Wordtree::trimToErrors()
 {
-	//returns true if the Node shall be deleted
-	//bottom up approach to avoid pointer Madness
-	std::function<bool (Word*)> traverseTree = [&](Word* w){
-		if( w == 0 )
-			return false;
 
-		Word* child = (w -> getLeft());
-		if( traverseTree(child) )
-			deleteNode(child,w);
-		child = (w -> getRight());
-		if( traverseTree(child) )
-			deleteNode(child,w);
-
-		return !(w -> hasVariations());
-	};
-
-	if(traverseTree(root))
-		deleteNode(root,0);
 }
 
-Wordtree* Wordtree::trimPunctuation()
+Wordtree::Word* Wordtree::find(std::string& searchword)
 {
-	Wordtree* newt = new Wordtree;
-
-	std::function<void (Word*)> traverseTree = [&](Word* w){
-		if( w == 0 )
-			return;
-
-		std::string strippedword = w -> getContent();
-		wordtree::stripPunctuation(strippedword);
-		Word* ntw = (newt -> find(strippedword));
-		if( ntw == 0 )
-		{
-			Wordtree* vart = w -> getVariationTree();
-			if (vart != 0)
-				vart = (vart -> trimPunctuation());
-			ntw = new Word(strippedword, vart, w -> getNumber());
-			newt -> minsert(ntw);
-		}
-		else
-		{
-			ntw -> merge( w );
-		}
-		traverseTree( w -> getLeft() );
-		traverseTree( w -> getRight() );
-	};
-
-	traverseTree(root);
-
-	return newt;
-}
-
-Word* Wordtree::find(std::string& fword)
-{
-	int c;
 	Word* w = root;
-	while (w != 0)
+	int c;
+	while( w != 0 )
 	{
-		c = fword.compare((w -> getContent()));
-		if(c == 0)
+		c = searchword.compare( *(w -> content) );
+		if ( c == 0 )
 			break;
-		else if( c < 0 )
-			w = (w -> getLeft());
+		else if ( c < 0 )
+			w = ( w -> left );
 		else
-			w = (w -> getRight());
+			w = ( w -> right );
 	}
 	return w;
 }
 
-int Wordtree::size()
-{
-	std::function<int (Word*)> subtreeSize = [&](Word* w){
-		if( w == 0 )
-			return 0;
-		int count = 1;
-		count += subtreeSize(w -> getLeft());
-		count += subtreeSize(w -> getRight());
-		return count;
-	};
-
-	return subtreeSize(root);
-}
-
-int Wordtree::countWords(bool includeErrors)
-{
-	std::function<int (Word*)> traverseTree = [&](Word* w){
-		if( w == 0)
-			return 0;
-
-		int count = w -> getNumber();
-
-		if( includeErrors && (w -> getVariationTree()) != 0)
-			count += w -> getVariationTree() -> countWords(false);
-
-		count += traverseTree(w -> getLeft());
-		count += traverseTree(w -> getRight());
-
-		return count;
-	};
-
-	return traverseTree(root);
-}
-
-Wordtree* Wordtree::copy()
-{
-	Wordtree* newt = new Wordtree;
-	std::function<void (Word*)> traverseTree = [&](Word* w){
-		if( w == 0 )
-			return;
-		traverseTree( ( w-> getLeft()) );
-		traverseTree( ( w-> getRight()) );
-		newt -> minsert( new Word(*w) );
-	};
-	return newt;
-}
-
-void Wordtree::merge(Wordtree* tomerge)
-{
-	if(tomerge == 0)
-		return;
-
-	std::function<void (Word*)> traverseForeignTree = [&](Word* w){
-		if( w == 0 )
-			return;
-
-		traverseForeignTree(w -> getLeft());
-		traverseForeignTree(w -> getRight());
-
-		Word* p = find( w -> getContent() );
-		if( p == 0 )
-		{
-			if( (w -> getLeft()) != 0)
-				delete ( w -> getLeft());
-			w -> assignLeft(0);
-
-			if( (w -> getRight()) != 0)
-				delete (w -> getRight());
-			w -> assignRight(0);
-			minsert( w );
-		}
-		else
-			p -> merge(w);
-	};
-
-	traverseForeignTree((tomerge -> root));
-}
-
-void Wordtree::deleteNode(Word* w, Word* parent)
-{
-	if( w == 0 )
-		return;
-
-	//unlink w by changing the reference from parent to the right child
-	if((w -> getLeft()) == 0)
-	{
-		if(parent == 0)
-			root = (w -> getRight());
-		else if((parent -> getLeft()) == w)
-			parent -> assignLeft((w -> getRight()));
-		else if((parent -> getRight()) == w)
-			parent -> assignRight((w -> getRight()));
-	}
-	//as above, only mirrored
-	else if((w -> getRight()) == 0)
-	{
-		if(parent == 0)
-			root = (w -> getLeft());
-		else if((parent -> getLeft()) == w)
-			parent -> assignLeft((w -> getLeft()));
-		else if((parent -> getRight()) == w)
-			parent -> assignRight((w -> getLeft()));
-	}
-	else{
-		//find an entry in the middle, copy its contents over and delete the now doube enty
-		//instead of w. This node is guaranteed to have at least one free child
-		parent = w;
-		Word* p = (w -> getRight());
-		while ((p -> getLeft()) != 0)
-		{
-			parent = p;
-			p = (p -> getLeft());
-		}
-		*w = *p;
-		deleteNode(p,parent);
-		return;
-	}
-
-	//We don't want the deconstructor to remove the subtrees
-	w -> assignLeft(0);
-	w -> assignRight(0);
-	delete w;
-}
-
-void Wordtree::minsert(Word* toinsert)
+void Wordtree::insertNode(Word* toinsert)
 {
 	if( root == 0 )
 	{
@@ -294,29 +139,140 @@ void Wordtree::minsert(Word* toinsert)
 		return;
 	}
 
+	Word* w = root;
 	int c;
-	Word* wp = root;
-	while(wp != 0)
+	while ( w != 0 )
 	{
-		c = (toinsert -> getContent()).compare((wp-> getContent()));
-		if( c == 0 )
+		c = toinsert-> content-> compare( *(w-> content) );
+
+		//this means the Word is already in the tree. It SHOULD never happen.
+		if ( c == 0 )
 		{
+			std::cerr<<"Tree Corruption with "<<toinsert -> content<<" already in the tree";
 			return;
-			std::cerr<<"Tree Corruption with "<<toinsert->getContent()<<" already in the tree:"<<std::endl;
-			exit(1);
 		}
-		else if( c < 0 )
+		else if ( c < 0 )
 		{
-			if( (wp -> getLeft()) == 0 )
-				wp -> assignLeft(toinsert);
+			if ( (w -> left) == 0 )
+			{
+				w -> left = toinsert;
+				toinsert -> parent = w;
+				return;
+			}
 			else
-				wp = (wp -> getLeft());
+				w = w -> left;
 		}
-		else{
-			if( (wp -> getRight()) == 0 )
-				wp -> assignRight(toinsert);
+		else
+		{
+			if ( (w -> right) == 0 )
+			{
+				w -> right = toinsert;
+				toinsert -> parent = w;
+				return;
+			}
 			else
-				wp = (wp -> getRight());
+				w = w -> right;
 		}
 	}
+}
+
+int Wordtree::serialTreeWalk(Word* w, std::function<int (Word*)> action)
+{
+	if( w == 0 )
+		return 0;
+
+	int count = 0;
+
+	count += serialTreeWalk(w -> left, action);
+	count += serialTreeWalk(w -> right, action);
+	count += action(w);
+
+	return count;
+}
+
+Wordtree::Word* Wordtree::buildtree(int left, int right, std::function<Word* ()> nextNode)
+{
+	if (left > right)
+		return (Word*) 0;
+
+	int mid = left + ((right -left) / 2);
+
+	Word* leftchild = buildtree(left, mid-1,nextNode);
+
+	Word* node = nextNode();
+
+	(node -> left) = leftchild;
+	(node -> right) = buildtree(mid+1, right,nextNode);
+
+	if( (node -> left) != 0 )
+		node -> left -> parent = node;
+	if( (node -> right) != 0 )
+		node -> right -> parent = node;
+
+	return node;
+}
+
+void Wordtree::unlinkNode(Word* victim, bool deleteNode)
+{
+	if(victim == 0)
+		return;
+
+	if( (victim -> left) == 0 )
+	{
+		if( (victim -> parent) == 0 )
+			root = (victim -> right);
+		else if( (victim -> parent -> left) == victim )
+			(victim -> parent -> left)  = (victim -> right);
+		else
+			(victim -> parent -> right) = (victim -> right);
+	}
+	else if( (victim -> right) == 0 )
+	{
+		if ( (victim -> parent) == 0 )
+			root = (victim -> left);
+		else if( (victim -> parent -> left) == victim )
+			(victim -> parent -> left)  = (victim -> left);
+		else 
+			(victim -> parent -> right) = (victim -> left);
+	}
+	else{
+		Word* w = victim -> right;
+		while( (w -> left) != 0 )
+			w = (w -> left);
+
+		Word* tmp;
+		tmp                = (w -> parent);
+		(w -> parent)      = (victim -> parent);
+		(victim -> parent) = tmp;
+
+		tmp                = (w -> left);
+		(w -> left)        = (victim -> left);
+		(victim -> left)   = tmp;
+
+		tmp                = (w -> right);
+		(w -> right)       = (victim -> right);
+		(victim -> right)  = tmp;
+
+		unlinkNode(victim,false);
+	}
+	if(deleteNode)
+		delete victim;
+
+}
+
+std::string Wordtree::serializetostring()
+{
+	std::string s="";
+
+	std::function<int (Word*)> addtoString = [&](Word* w)
+	{
+		s.append( " " );
+		s.append( *(w -> content) );
+		s.append( std::to_string( w -> number ) );
+		return 0;
+	};
+
+	serialTreeWalk(root, addtoString);
+
+	return s;
 }
