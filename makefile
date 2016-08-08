@@ -29,12 +29,12 @@ flagless: all
 	$(OPROG)
 
 text: all
-	$(OPROG) -g customtext.txt
+	$(OPROG) -g
 
 all : buildbin $(OPROG)
 
 debug: all
-	valgrind $(OPROG) $(RUNFLAGS) -g sometext.txt
+	valgrind $(OPROG) $(RUNFLAGS) -g customtext.txt
 
 clean:
 	find bin -name '*.o' -delete

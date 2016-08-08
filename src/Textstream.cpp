@@ -75,8 +75,13 @@ void Textstream::loadposition()
 	{
 		int p;
 		prin >> p;
+		if( p < 0 )
+			return;
 		in.seekg(p);
 	}
+	if( in.eof() )
+		in.seekg(0);
+	
 	prin.close();
 }
 

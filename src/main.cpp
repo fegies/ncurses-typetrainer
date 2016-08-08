@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 	if(gentextmode)
 	{
 		if(filename.empty())
-			filename = "texts/customtext";
+			filename = "texts/customtext.txt";
 		wordtree::gentext(filename);
 		return 0;
 	}
