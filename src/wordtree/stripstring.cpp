@@ -14,7 +14,7 @@ void stripPunctuation(std::string& tostrip)
 	bool needsstripping = false;
 	bool ignorethis[word.length()];
 
-	for(int b,a = 0 ; a < word.length(); ++a )
+	for(unsigned int b,a = 0 ; a < word.length(); ++a )
 	{
 		ignorethis[a] = false;
 		for(b = 0; b < puncts.length(); ++b)
@@ -38,7 +38,7 @@ void stripPunctuation(std::string& tostrip)
 	{
 		if(ignorethis[i])
 			continue;
-		for(char a = 0; a < 4; ++a)
+		for(unsigned char a = 0; a < 4; ++a)
 			bytes[a] = 0;
 		felocale::to_utf8(word.at(i),bytes);
 		tostrip.append(bytes);
@@ -50,11 +50,9 @@ void stripSpaces(std::string& tostrip)
 	std::string t(tostrip);
 	tostrip.clear();
 
-	for(int i = 0; i < t.length(); ++i)
+	for(unsigned int i = 0; i < t.length(); ++i)
 		if( t.at(i) != ' ' )
 			tostrip.push_back(t.at(i));
-		
-	return tostrip;
 }
 
 }

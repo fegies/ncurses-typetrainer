@@ -2,3 +2,4 @@ bin/**
 texts/**/*.prog
 *.stat
 *.ttree
+*.txt

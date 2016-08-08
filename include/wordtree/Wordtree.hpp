@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <vector>
 
 /*
 	A binary Search Tree containing all words in a text and the number of times they were typed correctly,
@@ -53,8 +54,8 @@ public:
 	//returns the Sum of countWords(false) of all subtrees
 	int countErrors();
 
-	Wordtree* copy();
-
+	//returns a vector sorted by the number of errors in descending order
+	std::vector<Word*> toList();
 
 private:
 

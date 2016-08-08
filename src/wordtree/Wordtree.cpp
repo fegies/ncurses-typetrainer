@@ -157,6 +157,9 @@ void Wordtree::trimPunctuation()
 		std::string stripstring(*(w -> content));
 		std::cout<<stripstring<<" : ";
 		wordtree::stripPunctuation(stripstring);
+		if( stripstring.empty() )
+			return 0;
+		
 		std::cout<<stripstring<<std::endl;
 		int c = w -> content -> compare(stripstring);
 
@@ -176,18 +179,19 @@ void Wordtree::trimPunctuation()
 				if( (alttreeword -> variationTree) == 0 )
 					swapValues((alttreeword-> variationTree),(w -> variationTree));
 				else
-				{
 					alttreeword -> variationTree -> mergeTree( w -> variationTree );
-					alttreeword -> variationTree -> trimPunctuation();
-				}
 			}
+			w = alttreeword;
 		}
 		else
 		{
 			Word* n=new Word{new std::string(stripstring),(w -> number),0,0,0,(w->variationTree)};
 			(w -> variationTree) = 0;
 			alttree.insertNode(n);
+			w = n;
 		}
+		if( (w -> variationTree) != 0 )
+			w -> variationTree -> trimPunctuation();
 		return 0;
 	};
 
@@ -244,6 +248,38 @@ int Wordtree::countErrors()
 	};
 
 	return serialTreeWalk(root,countSubtreeWords);
+}
+
+std::vector<Wordtree::Word*> Wordtree::toList()
+{
+	std::vector<Word*> elements;
+
+	std::function<int (Word*)> addToList = [&](Word* w){
+		elements.push_back(w);
+		return 0;
+	};
+
+	serialTreeWalk(root,addToList);
+
+	auto sortByErrorNumber = [&](Word* lw, Word* rw){
+		int n1 = 0;
+		int n2 = 0;
+		if( (lw -> variationTree) != 0 )
+			n1 = lw -> variationTree -> countWords();
+		if( (rw -> variationTree) != 0 )
+			n2 = rw -> variationTree -> countWords();
+		return n1 > n2;
+	};
+
+	auto sortByCorrectNumber = [&](Word*& lw, Word*& rw){
+		return (lw -> number) > (rw -> number);
+	};
+
+	std::sort(elements.begin(),elements.end(), sortByCorrectNumber);
+
+	std::stable_sort(elements.begin(),elements.end(), sortByErrorNumber);
+
+	return elements;
 }
 
 void Wordtree::insertNode(Word* toinsert)
