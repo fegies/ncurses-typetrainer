@@ -5,6 +5,8 @@
 #include <sstream>
 #include <algorithm>
 
+#include "wordtree/stripstring.h"
+
 Wordtree::Wordtree()
 {
 	root = 0;
@@ -21,7 +23,7 @@ Wordtree::~Wordtree()
 		return 0;
 	};
 
-	serialTreeWalk (root, del);
+	bottomUpTreeWalk (root, del);
 }
 
 void Wordtree::insert(std::string& word)
@@ -44,6 +46,8 @@ void Wordtree::insertError(std::string& correctword, std::string& variation)
 		w = new Word {new std::string(correctword),0,0,0,0,0};
 		insertNode(w);
 	}
+	if ( (w -> variationTree) == 0 )
+		(w -> variationTree) = new Wordtree;
 	w -> variationTree-> insert(variation);
 }
 
@@ -111,7 +115,56 @@ void Wordtree::restorefromFile(std::string& filename)
 
 void Wordtree::trimToErrors()
 {
+	std::function<int (Word*)> examineNode = [&](Word* w){
+		if( (w -> variationTree) == 0 )
+		{
+			unlinkNode(w,true);
+			return 1;
+		}
+		else
+			return 0;
+	};
 
+	//Ignored return Value is the Number of deleted Nodes
+	bottomUpTreeWalk(root,examineNode);
+}
+
+void Wordtree::trimPunctuation()
+{
+	std::function<int (Word*)> examineNode = [&](Word* w){
+		std::string tostrip( *(w -> content) );
+		wordtree::stripPunctuation(tostrip);
+
+		//Ignore Nodes that contain no punctuation
+		if( tostrip.compare( *(w -> content) ) == 0 )
+			return 0;
+
+		Word* foundword = find(tostrip);
+
+		//The stripped Version is not in the Tree
+		//Because the position might have changed, it must be unlinked and reinserted
+		if( foundword == 0 )
+		{
+			unlinkNode(w,false);
+			delete (w -> content);
+			(w -> content) = new std::string(tostrip);
+			insertNode(w);
+		}
+		//The stripped Version is in the Tree.
+		//The nodes must be merged and w unlinked
+		else
+		{
+			mergeNode(foundword, w);
+			unlinkNode(w,true);
+			w = foundword;
+		}
+		if ( (w -> variationTree) != 0 )
+			w -> variationTree -> trimPunctuation();
+		return 1;
+	};
+
+	//ignored return value is here the number of changed Nodes
+	bottomUpTreeWalk(root,examineNode);
 }
 
 Wordtree::Word* Wordtree::find(std::string& searchword)
@@ -129,6 +182,56 @@ Wordtree::Word* Wordtree::find(std::string& searchword)
 			w = ( w -> right );
 	}
 	return w;
+}
+
+int Wordtree::size()
+{
+	std::function<int (Word*)> onePerNode = [&](Word* w){
+		return 1;
+	};
+
+	return serialTreeWalk(root,onePerNode);
+}
+
+int Wordtree::countWords()
+{
+	std::function <int (Word*)> getnum = [&](Word* w){
+		return ( w -> number );
+	};
+
+	return serialTreeWalk(root,getnum);
+}
+
+int Wordtree::countErrors()
+{
+	std::function<int (Word*)> countSubtreeWords = [&](Word* w){
+		if( (w -> variationTree) == 0 )
+			return 0;
+		else
+			return ( w -> variationTree -> countWords() );
+	};
+
+	return serialTreeWalk(root,countSubtreeWords);
+}
+
+void Wordtree::merge(Wordtree* tomerge)
+{
+	std::function<int (Word*)> examineNode = [&](Word* w){
+		Word* mainTreeWord = find( *(w -> content) );
+		if( mainTreeWord == 0 )
+		{
+			tomerge -> unlinkNode(w,false);
+			insertNode(w);
+		}
+		else
+		{
+			mergeNode(mainTreeWord,w);
+			tomerge -> unlinkNode(w,true);
+		}
+		return 0;
+	};
+
+	bottomUpTreeWalk((tomerge -> root), examineNode);
 }
 
 void Wordtree::insertNode(Word* toinsert)
@@ -176,6 +279,20 @@ void Wordtree::insertNode(Word* toinsert)
 	}
 }
 
+void Wordtree::mergeNode(Word* survivor, Word* tomerge)
+{
+	if( (survivor == 0) || (tomerge == 0) )
+		return;
+	(survivor -> number) += (tomerge -> number);
+	if( (survivor -> variationTree) == 0 )
+	{
+		(survivor -> variationTree) = (tomerge -> variationTree);
+		(tomerge  -> variationTree) = 0;
+	}
+	else
+		 survivor -> variationTree -> merge( (tomerge -> variationTree) );
+}
+
 int Wordtree::serialTreeWalk(Word* w, std::function<int (Word*)> action)
 {
 	if( w == 0 )
@@ -184,7 +301,21 @@ int Wordtree::serialTreeWalk(Word* w, std::function<int (Word*)> action)
 	int count = 0;
 
 	count += serialTreeWalk(w -> left, action);
+	count += action(w);
 	count += serialTreeWalk(w -> right, action);
+
+	return count;
+}
+
+int Wordtree::bottomUpTreeWalk(Word* w, std::function<int (Word*)> action)
+{
+	if( w == 0 )
+		return 0;
+
+	int count = 0;
+
+	count += bottomUpTreeWalk(w -> left, action);
+	count += bottomUpTreeWalk(w -> right, action);
 	count += action(w);
 
 	return count;
@@ -253,11 +384,27 @@ void Wordtree::unlinkNode(Word* victim, bool deleteNode)
 		(w -> right)       = (victim -> right);
 		(victim -> right)  = tmp;
 
+		if( (w -> parent) == 0 )
+			root = w;
+		else if( (w -> parent -> left) == victim)
+			(w -> parent -> left) = w;
+		else
+			(w -> parent -> right) = w;
+
 		unlinkNode(victim,false);
 	}
-	if(deleteNode)
-		delete victim;
 
+	(victim -> left)  = 0;
+	(victim -> right) = 0;
+
+	if(deleteNode)
+	{
+		if ( (victim -> content) != 0)
+			delete (victim -> content);
+		if ( (victim -> variationTree) != 0)
+			delete (victim -> variationTree);
+		delete victim;
+	}
 }
 
 std::string Wordtree::serializetostring()

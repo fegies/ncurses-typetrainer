@@ -28,6 +28,9 @@ run : all
 flagless: all
 	$(OPROG)
 
+text: all
+	$(OPROG) -g customtext.txt
+
 all : buildbin $(OPROG)
 
 debug: all

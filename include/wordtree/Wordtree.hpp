@@ -46,9 +46,9 @@ public:
 	int size();
 
 	//incorporates the Wordnumbers saved in the tree
-	//if IncludeErrors is set, also adds the number of Words in the variations Subtree
-	//could be smallet than size() if a lot of words have the number 0
-	int countWords(bool includeErrors);
+	//Returns the sum of the number entries of the entire Tree
+	//Ignores Subtree Values
+	int countWords();
 
 	//returns the Sum of countWords(false) of all subtrees
 	int countErrors();
@@ -64,13 +64,17 @@ private:
 
 	void insertNode(Word* toinsert);
 
+	void mergeNode(Word* survivor, Word* tomerge);
+
 	//takes a function to execute for every Word in the tree
-	//Descends into both Subtrees before executing the Action.
+	//Descends into the first subtree, executes the action and then descends into
+	//the second subtree
 	int serialTreeWalk(Word* w,std::function<int (Word*)> action);
+	//Descends into both Subtrees before executing the action
+	int bottomUpTreeWalk(Word* w, std::function<int (Word*)> action);
 
 	//rebuild the Wordtree
 	Word* buildtree(int left,int right,std::function<Word* ()> nextNode);
-	void restoreFromString(std::string s);
 
 	//if parent = 0 it is a root deletion
 	//if delete is true, Word victim is deleted. Otherwise it is only unlinked and can be
