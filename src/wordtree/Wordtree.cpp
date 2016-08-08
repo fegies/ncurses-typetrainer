@@ -321,6 +321,20 @@ int Wordtree::bottomUpTreeWalk(Word* w, std::function<int (Word*)> action)
 	return count;
 }
 
+int Wordtree::topDownTreeWalk(Word* w, std::function<int (Word*)> action)
+{
+	if( w == 0 )
+		return 0;
+
+	int count = 0;
+
+	count += action(w);
+	count += topDownTreeWalk(w -> left, action);
+	count += topDownTreeWalk(w -> right, action);
+
+	return count;
+}
+
 Wordtree::Word* Wordtree::buildtree(int left, int right, std::function<Word* ()> nextNode)
 {
 	if (left > right)
@@ -335,75 +349,91 @@ Wordtree::Word* Wordtree::buildtree(int left, int right, std::function<Word* ()>
 	(node -> left) = leftchild;
 	(node -> right) = buildtree(mid+1, right,nextNode);
 
-	if( (node -> left) != 0 )
-		node -> left -> parent = node;
+	if( (node -> left)  != 0 )
+		(node -> left  -> parent) = node;
 	if( (node -> right) != 0 )
-		node -> right -> parent = node;
+		(node -> right -> parent) = node;
 
 	return node;
 }
 
-void Wordtree::unlinkNode(Word* victim, bool deleteNode)
+template <typename t>
+void swapValues(t& a1, t& a2)
+{
+	t tmp = a1;
+	a1 = a2;
+	a2 = tmp;
+}
+
+void Wordtree::unlinkNode(Word*& victim, bool deleteNode)
 {
 	if(victim == 0)
 		return;
 
-	if( (victim -> left) == 0 )
-	{
+	std::cout<<"unlinking: "<<*(victim -> content)<<((deleteNode)?" kill" : " live")<<std::endl;
+
+	//changes the reference from the victims parent to the new child
+	//changes nothing else
+	auto parentRelink = [&](Word* victim, Word* newchild){
 		if( (victim -> parent) == 0 )
-			root = (victim -> right);
-		else if( (victim -> parent -> left) == victim )
-			(victim -> parent -> left)  = (victim -> right);
+		{
+			(newchild -> parent) = 0;
+			root = newchild;
+		}
+		else if( (victim -> parent -> left) == victim)
+			(victim -> parent -> left) = newchild;
 		else
-			(victim -> parent -> right) = (victim -> right);
-	}
-	else if( (victim -> right) == 0 )
+			(victim -> parent -> right) = newchild;
+	};
+
+	//The node can be unlinked directly.
+	if( (victim -> left) == 0 || (victim -> right) == 0 )
 	{
-		if ( (victim -> parent) == 0 )
-			root = (victim -> left);
-		else if( (victim -> parent -> left) == victim )
-			(victim -> parent -> left)  = (victim -> left);
-		else 
-			(victim -> parent -> right) = (victim -> left);
-	}
-	else{
-		Word* w = victim -> right;
-		while( (w -> left) != 0 )
-			w = (w -> left);
+		//Not neccessarily nonempty
+		Word* nonemptychild;
 
-		Word* tmp;
-		tmp                = (w -> parent);
-		(w -> parent)      = (victim -> parent);
-		(victim -> parent) = tmp;
-
-		tmp                = (w -> left);
-		(w -> left)        = (victim -> left);
-		(victim -> left)   = tmp;
-
-		tmp                = (w -> right);
-		(w -> right)       = (victim -> right);
-		(victim -> right)  = tmp;
-
-		if( (w -> parent) == 0 )
-			root = w;
-		else if( (w -> parent -> left) == victim)
-			(w -> parent -> left) = w;
+		if ( (victim -> left) == 0)
+			nonemptychild = (victim -> right);
 		else
-			(w -> parent -> right) = w;
+			nonemptychild = (victim -> left);
 
-		unlinkNode(victim,false);
+		if( nonemptychild != 0 )
+			(nonemptychild -> parent) = (victim -> parent);
+
+		parentRelink(victim, nonemptychild);
 	}
+	//the node has two children and may not be unlinked directly.
+	else
+	{
+		//Find a node with at least a single free child that can replace the victim
+		Word* replacement = (victim -> right);
+		while ( (replacement -> left) != 0 )
+			replacement = (replacement -> left);
 
-	(victim -> left)  = 0;
-	(victim -> right) = 0;
+		//swap the Tree references of victim and replacement
+		//(replace victim with replacament)
+		swapValues( (replacement-> content),(victim -> content));
+		swapValues( (replacement-> variationTree),(victim -> variationTree));
+		swapValues( (replacement-> number),(victim-> number));
+
+		//unlink the victim again (it moved down the tree, has a new position)
+		unlinkNode(replacement,false);
+		victim = replacement;
+	}
 
 	if(deleteNode)
 	{
-		if ( (victim -> content) != 0)
+		if( (victim -> content) != 0 )
 			delete (victim -> content);
-		if ( (victim -> variationTree) != 0)
+		if( (victim -> variationTree) != 0 )
 			delete (victim -> variationTree);
 		delete victim;
+	}
+	//if victim is to be used in another Tree the children must be set to 0
+	else
+	{
+		(victim -> left)  = 0;
+		(victim -> right) = 0;
 	}
 }
 
@@ -415,6 +445,7 @@ std::string Wordtree::serializetostring()
 	{
 		s.append( " " );
 		s.append( *(w -> content) );
+		s.append( " ");
 		s.append( std::to_string( w -> number ) );
 		return 0;
 	};

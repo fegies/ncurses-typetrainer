@@ -1,4 +1,4 @@
 bin/**
-#texts/*.prog
+texts/**/*.prog
 *.stat
 *.ttree

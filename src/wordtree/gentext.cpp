@@ -14,8 +14,6 @@ void gentext(std::string& filename)
 	wt.restorefromFile(tfname);
 	wt.trimToErrors();
 	wt.storeinFile(ofname1);
-	//wt.trimPunctuation();
-	//wt.storeinFile(ofname2);
 }
 
 }

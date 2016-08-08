@@ -72,6 +72,8 @@ private:
 	int serialTreeWalk(Word* w,std::function<int (Word*)> action);
 	//Descends into both Subtrees before executing the action
 	int bottomUpTreeWalk(Word* w, std::function<int (Word*)> action);
+	//executes the action before descending into the subtree
+	int topDownTreeWalk(Word* w, std::function<int (Word*)> action);
 
 	//rebuild the Wordtree
 	Word* buildtree(int left,int right,std::function<Word* ()> nextNode);
@@ -79,7 +81,7 @@ private:
 	//if parent = 0 it is a root deletion
 	//if delete is true, Word victim is deleted. Otherwise it is only unlinked and can be
 	//used in another Tree.
-	void unlinkNode(Word* victim,bool deleteNode);
+	void unlinkNode(Word*& victim,bool deleteNode);
 
 	//Intended for the Variations Subtree
 	std::string serializetostring();

@@ -89,6 +89,7 @@ std::string selectionscreen()
 				return "texts/"+filenames[selection];
 		}
 	}
+	return "";
 }
 
 void start(std::string filename, bool saveprog, bool savestats,bool usetree)
@@ -134,7 +135,7 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	//Lambdas
 	auto add_widech = [&](int c){
 		char bytes[5];
-		for(char a = 0; a < 5 ; ++a)
+		for(unsigned char a = 0; a < 5 ; ++a)
 			bytes[a] = 0;
 
 		felocale::to_utf8(c,bytes);
@@ -245,10 +246,10 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 			}
 			else if(c != 0){
 				char bytes[5];
-				for(char d = 0; d < 5; ++d)
+				for(unsigned char d = 0; d < 5; ++d)
 					bytes[d] = 0;
 				char count = felocale::to_utf8(c,bytes);
-				for(char a = 0; a < count; ++a)
+				for(unsigned char a = 0; a < count; ++a)
 					typedword.append(bytes);
 			}
 		}

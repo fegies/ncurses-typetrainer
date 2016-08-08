@@ -3,7 +3,7 @@
 PROG      = typetrainer
 VPATH     = src include
 ODIR      = ./bin
-SHAREFLAGS= -g -pipe -O2
+SHAREFLAGS= -g -pipe -Wall
 CFLAGS    = $(SHAREFLAGS) -std=c++11
 LINKFLAGS = $(SHAREFLAGS) -lpthread -lncursesw
 COMPILER  = $(CXX)
@@ -34,7 +34,7 @@ text: all
 all : buildbin $(OPROG)
 
 debug: all
-	valgrind $(OPROG) $(RUNFLAGS)
+	valgrind $(OPROG) $(RUNFLAGS) -g sometext.txt
 
 clean:
 	find bin -name '*.o' -delete
