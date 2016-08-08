@@ -36,6 +36,11 @@ Wordtree::~Wordtree()
 
 void Wordtree::insert(std::string& word)
 {
+	wordtree::stripSpaces(word);
+
+	if( word.empty() )
+		return;
+
 	Word* w = find(word);
 	if ( w == 0 )
 	{
@@ -48,6 +53,12 @@ void Wordtree::insert(std::string& word)
 
 void Wordtree::insertError(std::string& correctword, std::string& variation)
 {
+	wordtree::stripSpaces(correctword);
+	wordtree::stripSpaces(variation);
+
+	if( correctword.empty() || variation.empty() )
+		return;
+
 	Word* w = find(correctword);
 	if ( w == 0)
 	{

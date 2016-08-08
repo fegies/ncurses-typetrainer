@@ -45,4 +45,16 @@ void stripPunctuation(std::string& tostrip)
 	}
 }
 
+void stripSpaces(std::string& tostrip)
+{
+	std::string t(tostrip);
+	tostrip.clear();
+
+	for(int i = 0; i < t.length(); ++i)
+		if( t.at(i) != ' ' )
+			tostrip.push_back(t.at(i));
+		
+	return tostrip;
+}
+
 }
