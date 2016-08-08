@@ -7,6 +7,14 @@
 
 #include "wordtree/stripstring.h"
 
+template <typename t>
+void swapValues(t& a1, t& a2)
+{
+	t tmp = a1;
+	a1 = a2;
+	a2 = tmp;
+}
+
 Wordtree::Wordtree()
 {
 	root = 0;
@@ -131,40 +139,53 @@ void Wordtree::trimToErrors()
 
 void Wordtree::trimPunctuation()
 {
-	std::function<int (Word*)> examineNode = [&](Word* w){
-		std::string tostrip( *(w -> content) );
-		wordtree::stripPunctuation(tostrip);
+	Wordtree alttree;
 
-		//Ignore Nodes that contain no punctuation
-		if( tostrip.compare( *(w -> content) ) == 0 )
-			return 0;
+	std::function<int (Word*)> inspectNode = [&](Word* w){
 
-		Word* foundword = find(tostrip);
+		std::string stripstring(*(w -> content));
+		std::cout<<stripstring<<" : ";
+		wordtree::stripPunctuation(stripstring);
+		std::cout<<stripstring<<std::endl;
+		int c = w -> content -> compare(stripstring);
 
-		//The stripped Version is not in the Tree
-		//Because the position might have changed, it must be unlinked and reinserted
-		if( foundword == 0 )
+		if (c != 0)
 		{
-			unlinkNode(w,false);
-			delete (w -> content);
-			(w -> content) = new std::string(tostrip);
-			insertNode(w);
+			Word* alttreeword = alttree.find(stripstring);
+			if( alttreeword == 0 )
+			{
+				alttreeword = new Word{new std::string(stripstring),(w -> number),0,0,0,0};
+				(alttreeword -> variationTree) = (w -> variationTree);
+				( w -> variationTree ) = 0;
+				alttree.insertNode(alttreeword);
+			}
+			else
+			{
+				(alttreeword -> number) += (w -> number);
+				if( (alttreeword -> variationTree) == 0 )
+					swapValues((alttreeword-> variationTree),(w -> variationTree));
+				else
+				{
+					alttreeword -> variationTree -> mergeTree( w -> variationTree );
+					alttreeword -> variationTree -> trimPunctuation();
+				}
+			}
 		}
-		//The stripped Version is in the Tree.
-		//The nodes must be merged and w unlinked
 		else
 		{
-			mergeNode(foundword, w);
-			unlinkNode(w,true);
-			w = foundword;
+			Word* n=new Word{new std::string(stripstring),(w -> number),0,0,0,(w->variationTree)};
+			(w -> variationTree) = 0;
+			alttree.insertNode(n);
 		}
-		if ( (w -> variationTree) != 0 )
-			w -> variationTree -> trimPunctuation();
-		return 1;
+		return 0;
 	};
 
-	//ignored return value is here the number of changed Nodes
-	bottomUpTreeWalk(root,examineNode);
+	topDownTreeWalk(root,inspectNode);
+
+	this -> ~Wordtree();
+	root = 0;
+	swapValues(root, alttree.root);
+
 }
 
 Wordtree::Word* Wordtree::find(std::string& searchword)
@@ -214,26 +235,6 @@ int Wordtree::countErrors()
 	return serialTreeWalk(root,countSubtreeWords);
 }
 
-void Wordtree::merge(Wordtree* tomerge)
-{
-	std::function<int (Word*)> examineNode = [&](Word* w){
-		Word* mainTreeWord = find( *(w -> content) );
-		if( mainTreeWord == 0 )
-		{
-			tomerge -> unlinkNode(w,false);
-			insertNode(w);
-		}
-		else
-		{
-			mergeNode(mainTreeWord,w);
-			tomerge -> unlinkNode(w,true);
-		}
-		return 0;
-	};
-
-	bottomUpTreeWalk((tomerge -> root), examineNode);
-}
-
 void Wordtree::insertNode(Word* toinsert)
 {
 	if( root == 0 )
@@ -279,18 +280,25 @@ void Wordtree::insertNode(Word* toinsert)
 	}
 }
 
-void Wordtree::mergeNode(Word* survivor, Word* tomerge)
+void Wordtree::mergeTree(Wordtree* tomerge)
 {
-	if( (survivor == 0) || (tomerge == 0) )
+	if ( tomerge == 0 )
 		return;
-	(survivor -> number) += (tomerge -> number);
-	if( (survivor -> variationTree) == 0 )
-	{
-		(survivor -> variationTree) = (tomerge -> variationTree);
-		(tomerge  -> variationTree) = 0;
-	}
-	else
-		 survivor -> variationTree -> merge( (tomerge -> variationTree) );
+
+	std::function<int (Word*)> inspectNode = [&](Word* w){
+		Word* mtw = find(*(w -> content));
+		if( mtw == 0 )
+		{
+			mtw = new Word{new std::string(*(w-> content)),(w-> number),0,0,0,0};
+			inspectNode(mtw);
+		}
+		else
+			(mtw -> number) += (w -> number);
+
+		return 0;
+	};
+
+	topDownTreeWalk(root, inspectNode);
 }
 
 int Wordtree::serialTreeWalk(Word* w, std::function<int (Word*)> action)
@@ -355,14 +363,6 @@ Wordtree::Word* Wordtree::buildtree(int left, int right, std::function<Word* ()>
 		(node -> right -> parent) = node;
 
 	return node;
-}
-
-template <typename t>
-void swapValues(t& a1, t& a2)
-{
-	t tmp = a1;
-	a1 = a2;
-	a2 = tmp;
 }
 
 void Wordtree::unlinkNode(Word*& victim, bool deleteNode)

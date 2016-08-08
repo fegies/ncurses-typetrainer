@@ -2,6 +2,8 @@
 
 #include "wordtree/Wordtree.hpp"
 
+#include <iostream>
+
 namespace wordtree
 {
 
@@ -14,6 +16,12 @@ void gentext(std::string& filename)
 	wt.restorefromFile(tfname);
 	wt.trimToErrors();
 	wt.storeinFile(ofname1);
+	std::cout<<std::endl<<"Finished Trimming Errors"<<std::endl<<std::endl;
+	wt.trimPunctuation();
+	wt.storeinFile(ofname2);
+	std::cout<<std::endl<<"Finished Trimming Punctuation"<<std::endl<<std::endl;
+
+	int errorcount = wt.countErrors();
 }
 
 }

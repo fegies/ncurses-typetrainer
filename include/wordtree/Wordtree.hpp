@@ -55,8 +55,6 @@ public:
 
 	Wordtree* copy();
 
-	//merges tree into the tree executing the method
-	void merge(Wordtree* tree);
 
 private:
 
@@ -64,7 +62,9 @@ private:
 
 	void insertNode(Word* toinsert);
 
-	void mergeNode(Word* survivor, Word* tomerge);
+	//does not unlink, only copy.
+	//does not copy Subtrees
+	void mergeTree(Wordtree* tomerge);
 
 	//takes a function to execute for every Word in the tree
 	//Descends into the first subtree, executes the action and then descends into
