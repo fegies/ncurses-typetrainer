@@ -68,7 +68,7 @@ std::string selectionscreen()
 
 	std::vector<std::string> filenames;
 	dirops::lstexts(filenames);
-	
+
 	if( errortreeExists )
 		filenames.push_back("Generate a Text based on the Error Tree");
 
@@ -193,8 +193,13 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 		clear();
 		std::string tstring = ts.nextline();
 		line = tstring;
-		if(line.empty())
+		if(line.empty()){
+			clear();
+			mvprintw(1,0,"You reached The End of the line...");
+			printstatus();
 			timerunning = false;
+			progrunning = false;
+		}
 		else
 		{
 			if(clength < line.length())
@@ -209,6 +214,9 @@ void start(std::string filename, bool saveprog, bool savestats,bool usetree)
 	};
 
 	auto printline = [&](){
+		if( !progrunning )
+			return;
+		
 		printingmutex.lock();
 		move(yval,0);
 		int x;

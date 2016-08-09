@@ -59,6 +59,11 @@ std::string Textstream::nextline()
 		stripstring(line);
 	}
 
+	if(in.eof()){
+		lastposition = 0;
+		saveposition();
+	}
+
 	return line;
 }
 
@@ -79,6 +84,7 @@ void Textstream::loadposition()
 			return;
 		in.seekg(p);
 	}
+
 	if( in.eof() )
 		in.seekg(0);
 	
