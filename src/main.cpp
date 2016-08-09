@@ -74,6 +74,12 @@ int main(int argc, char** argv)
 	if(filename.empty())
 		filename = typescreen::selectionscreen();
 
+	if(filename == "texts/Generate a Text based on the Error Tree" )
+	{
+		filename = "texts/.customtext.txt";
+		wordtree::gentext(filename);
+	}
+
 	typescreen::start(filename,saveprog,savestats,usetree);
 	return 0;
 }

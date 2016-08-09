@@ -55,6 +55,7 @@ std::string selectionscreen()
 
 	std::vector<std::string> filenames;
 	dirops::lstexts(filenames);
+	filenames.push_back("Generate a Text based on the Error Tree");
 	mvprintw(0,0,"Use the arrow keys and enter to select one of the following Files:");
 	int selection = 0;
 

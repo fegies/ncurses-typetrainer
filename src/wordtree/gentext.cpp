@@ -58,13 +58,21 @@ void gentext(std::string& filename)
 	int linePos = -1;
 	for(int a = 0; a < s; ++a)
 	{
-		if(++linePos == 10)
+		if(++linePos == wordsperline)
 		{
 			linePos = 0;
 			fout << std::endl;
 		}
 		fout << " " << *text[a];
 	}
+
+	fout.close();
+	std::string pfilename(filename);
+	pfilename += ".prog";
+	fout.open(pfilename);
+	fout << 0;
+	fout.close();
+
 }
 
 }
