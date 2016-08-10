@@ -7,3 +7,8 @@ Accepted command line arguments:
 --p : does not save progress on exit
 
 -f : loads file named f
+
+-g [filename] : generates a text based on the Errortree
+
+-a : run an analysis on the Errortree. Saves the results in a folder named letterMistypes.stat
+	The results are in a gnuplot compatible format.

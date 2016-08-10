@@ -417,7 +417,7 @@ void Wordtree::unlinkNode(Word*& victim, bool deleteNode)
 	if(victim == 0)
 		return;
 
-	std::cout<<"unlinking: "<<*(victim -> content)<<((deleteNode)?" kill" : " live")<<std::endl;
+	//std::cout<<"unlinking: "<<*(victim -> content)<<((deleteNode)?" kill" : " live")<<std::endl;
 
 	//changes the reference from the victims parent to the new child
 	//changes nothing else

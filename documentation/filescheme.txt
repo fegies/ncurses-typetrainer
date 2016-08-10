@@ -1,10 +1,10 @@
 The programm requires a directory named texts in
 the $PWD of the executing Program.
 
-It recognizes any files ending on .txt as Text files to be selected from.
+It recognizes any files in this directory not starting with . and not ending on .prog as Text files to be selected from.
 
 Progess is stored in files in the texts directory
-having the same name as a .txt file, but with an added suffix of
+having the same name as a Text file, but with an added suffix of
 .prog
 
 The statistical analysis tree "wordtree" is saved in a file named
@@ -13,3 +13,11 @@ in the following manner:
 
 the first word in every line is the word in the main tree, in alphabetical order. It is followed by the number of its occurences.
 the words following it are the mistyped words.
+
+Analysis of letter Mistyping:
+The Analysis files are stored in a directory named letterMistypes.stat
+This directory contains a file with the same name. This file contains data on how often every letter was mistyped
+The remaining files in the directory are named in the following fashion:
+[letter].stat
+These files contain data on what and how often something other than the letter was typed.
+The values are given in percent.

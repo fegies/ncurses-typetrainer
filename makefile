@@ -16,7 +16,7 @@ OBJS      = $(BASEOBS) $(addprefix felocale/, $(FELOCALOBS)) $(addprefix wordtre
 
 BASEOBS    = main.o typescreen.o Textstream.o statsave.o dirlist.o
 FELOCALOBS = Intstring.o encodeconvert.o
-WORDTREEOBS= Wordtree.o gentext.o stripstring.o
+WORDTREEOBS= Wordtree.o gentext.o stripstring.o analysis.o
 
 OPROG = $(addprefix $(ODIR)/, $(PROG))
 RUNFLAGS =
@@ -28,8 +28,11 @@ run : all
 flagless: all
 	$(OPROG)
 
+analysis: all
+	$(OPROG) -a
+
 text: all
-	$(OPROG) -g
+	$(OPROG) -g customtext.txt
 
 all : buildbin $(OPROG)
 

@@ -22,7 +22,7 @@ void gentext(std::string& filename)
 	Wordtree wt;
 	wt.restorefromFile(tfname);
 	wt.trimToErrors();
-	wt.storeinFile(ofname1);
+//	wt.storeinFile(ofname1);
 	std::cout<<std::endl<<"Finished Trimming Errors"<<std::endl<<std::endl;
 	wt.trimPunctuation();
 	wt.storeinFile(ofname2);
@@ -44,7 +44,10 @@ void gentext(std::string& filename)
 		w = words[a];
 		share = (double)(w -> variationTree -> countWords()) / (double)errorcount;
 		num = round( share * lengthGoal );
-		std::cout<<*(w -> content)<<" "<<num<<std::endl;
+
+		if( num > 0 )
+			std::cout<<*(w -> content)<<" "<<num<<std::endl;
+		
 		for( b = 0; b < num; ++b )
 			text.push_back( (w -> content) );
 	}

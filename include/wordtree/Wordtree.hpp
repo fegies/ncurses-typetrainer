@@ -51,7 +51,7 @@ public:
 	//Ignores Subtree Values
 	int countWords();
 
-	//returns the Sum of countWords(false) of all subtrees
+	//returns the Sum of countWords() of all subtrees
 	int countErrors();
 
 	//returns a vector sorted by the number of errors in descending order

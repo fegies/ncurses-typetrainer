@@ -5,6 +5,9 @@ namespace felocale
 
 char to_utf8(int widechar,char* bytes)
 {
+	for( unsigned char a = 0; a < 4 ; ++a)
+		bytes[a] = 0;
+
 	auto encodebytes = [&](char num){
 		for(;num > 0; --num)
 		{
